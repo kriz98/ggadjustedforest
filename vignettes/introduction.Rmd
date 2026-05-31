@@ -1,0 +1,258 @@
+---
+title: "Introduction to ggadjustedforest"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to ggadjustedforest}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.width  = 7,
+  fig.height = 4
+)
+```
+
+## Motivation
+
+When a study asks about the causal effect of a single **exposure** on an
+outcome, the coefficients for adjustment covariates (confounders) are almost
+never the quantities of interest.  Reporting them can even mislead readers,
+because confounder coefficients are not identified under the causal model — they
+absorb collider bias, mediation pathways, and other artefacts depending on the
+causal structure (Hernán & Robins, *Causal Inference: What If*, 2020; Westreich
+& Greenland, *Am J Epidemiol*, 2013).
+
+STROBE guidelines (Vandenbroucke et al., 2007) and recent work on the
+**estimand framework** (ICH E9(R1), 2019) both emphasise that reporting should
+clearly distinguish the target quantity from nuisance parameters.
+
+`ggadjustedforest` operationalises this principle: it fits the models you
+specify but **only exposes the exposure coefficient** in both the plot and the
+table, hiding confounder estimates by design.
+
+---
+
+## Basic usage — logistic regression
+
+```{r logistic}
+library(ggadjustedforest)
+
+data(mtcars)
+mtcars$am <- as.integer(mtcars$am)   # binary outcome: automatic (0) vs manual (1)
+
+result <- gg_adjusted_forest(
+  data       = mtcars,
+  outcome    = "am",
+  exposure   = "hp",
+  covariates = c("wt", "cyl"),
+  model_type = "logistic",
+  title      = "Effect of Horsepower on Transmission Type"
+)
+result$table
+```
+
+The returned object has three components:
+
+| Component | Contents |
+|---|---|
+| `$plot` | Combined forest plot + table (ggplot2 / patchwork) |
+| `$table` | Numeric data frame |
+| `$formatted_table` | Character table with formatted CI strings |
+
+To render the plot:
+
+```{r plot-logistic}
+result$plot
+```
+
+---
+
+## Cumulative adjustment
+
+When you want to visualise how the effect estimate changes as confounders are
+added sequentially — a common presentation in epidemiological reporting — use
+`cumulative = TRUE`:
+
+```{r cumulative}
+result_cum <- gg_adjusted_forest(
+  data       = mtcars,
+  outcome    = "am",
+  exposure   = "hp",
+  covariates = c("wt", "cyl", "disp"),
+  cumulative = TRUE,
+  title      = "Cumulative adjustment: hp on transmission"
+)
+result_cum$formatted_table[, c("model", "formatted", "p.value")]
+```
+
+You can rename the rows with `cumulative_labels`:
+
+```{r cumulative-labels}
+labels <- c(
+  "Unadjusted"         = "Crude",
+  "+ wt"               = "Adjusted for weight",
+  "+ wt + cyl"         = "Adjusted for weight + cylinders",
+  "+ wt + cyl + disp"  = "Fully adjusted"
+)
+
+result_cum2 <- gg_adjusted_forest(
+  data              = mtcars,
+  outcome           = "am",
+  exposure          = "hp",
+  covariates        = c("wt", "cyl", "disp"),
+  cumulative        = TRUE,
+  cumulative_labels = labels,
+  title             = "Cumulative adjustment with custom labels"
+)
+result_cum2$plot
+```
+
+---
+
+## Cox proportional hazards regression
+
+For time-to-event outcomes supply `model_type = "coxph"` along with `time_var`
+and `event_var`:
+
+```{r cox}
+lung <- survival::lung
+lung$status01 <- as.integer(lung$status == 2)
+lung <- stats::na.omit(lung[, c("time", "status01", "age", "sex", "ph.ecog")])
+
+result_cox <- gg_adjusted_forest(
+  data       = lung,
+  outcome    = "status01",
+  exposure   = "age",
+  covariates = c("sex", "ph.ecog"),
+  model_type = "coxph",
+  time_var   = "time",
+  event_var  = "status01",
+  title      = "Effect of Age on Survival (lung cancer)"
+)
+result_cox$plot
+```
+
+---
+
+## Customising appearance
+
+All the major aesthetic parameters are exposed:
+
+```{r custom}
+gg_adjusted_forest(
+  data           = mtcars,
+  outcome        = "am",
+  exposure       = "hp",
+  covariates     = "wt",
+  model_type     = "logistic",
+  color          = "#2166ac",
+  point_size     = 5,
+  point_shape    = 18,          # diamond
+  vline_color    = "firebrick",
+  vline_linetype = "dotted",
+  x_breaks       = c(0.9, 1.0, 1.1),
+  title          = "Custom aesthetics"
+)$plot
+```
+
+For linear models the x-axis is on the original scale (not log):
+
+```{r linear}
+gg_adjusted_forest(
+  data       = mtcars,
+  outcome    = "mpg",
+  exposure   = "hp",
+  covariates = c("wt", "cyl"),
+  model_type = "linear",
+  title      = "Effect of Horsepower on Fuel Efficiency"
+)$plot
+```
+
+---
+
+## Extracting the table only
+
+Use `forest_table()` when you only need the numbers:
+
+```{r table-only}
+forest_table(
+  data       = mtcars,
+  outcome    = "am",
+  exposure   = "hp",
+  covariates = c("wt", "cyl"),
+  model_type = "logistic"
+)
+```
+
+---
+
+## Comparing multiple outcomes side-by-side
+
+When a study examines one exposure across several outcomes (e.g. 30-day
+mortality, failure to rescue, and major complications), `gg_multi_outcome_forest()`
+produces a single faceted plot with one panel per outcome.
+
+### Simple mode
+
+All outcomes share the same exposure, covariates, and model type.
+
+```{r multi-simple, warning=FALSE, fig.height=5}
+mtcars$am <- as.integer(mtcars$am)
+mtcars$vs <- as.integer(mtcars$vs)
+
+multi_res <- gg_multi_outcome_forest(
+  data       = mtcars,
+  outcomes   = c("Transmission" = "am", "Engine Shape" = "vs"),
+  exposure   = "hp",
+  covariates = c("wt", "cyl"),
+  model_type = "logistic",
+  title      = "Effect of Horsepower on Two Outcomes",
+  show_table = FALSE
+)
+multi_res$plot
+```
+
+The combined table is available for export:
+
+```{r multi-table}
+multi_res$combined_table[, c("outcome", "model", "formatted", "p.value")]
+```
+
+### Advanced mode
+
+When outcomes require different covariate sets or model types, fit each one
+separately with `gg_adjusted_forest()` and pass the results as a named list.
+
+```{r multi-advanced, warning=FALSE, fig.height=5}
+r_am <- gg_adjusted_forest(mtcars, "am", "hp", covariates = "wt",
+                            show_table = FALSE)
+r_vs <- gg_adjusted_forest(mtcars, "vs", "hp", covariates = c("wt", "cyl"),
+                            show_table = FALSE)
+
+gg_multi_outcome_forest(
+  outcome_list = list("Transmission" = r_am, "Engine Shape" = r_vs),
+  title        = "Advanced mode: per-outcome covariate sets",
+  show_table   = FALSE
+)$plot
+```
+
+The `free_x = TRUE` argument allows each facet to use its own x-axis scale —
+useful when outcomes are on different scales (e.g. OR and HR side-by-side).
+
+---
+
+## References
+
+- Hernán MA, Robins JM (2020). *Causal Inference: What If*. Chapman & Hall/CRC.
+- Vandenbroucke JP et al. (2007). Strengthening the Reporting of Observational
+  Studies in Epidemiology (STROBE). *PLoS Med* 4(10): e297.
+- Westreich D, Greenland S (2013). The table 2 fallacy: presenting and
+  interpreting confounder and modifier coefficients. *Am J Epidemiol*
+  177(4): 292–298.
+- ICH E9(R1) (2019). Statistical Principles for Clinical Trials: Addendum on
+  Estimands and Sensitivity Analysis in Clinical Trials. ICH Harmonised
+  Guideline.
