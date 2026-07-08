@@ -8,4 +8,5 @@ inst/doc
 *.tar.gz
 tests/testthat/Rplots.pdf
 *.png
+!docs/**/*.png
 Rplots.pdf
