@@ -99,32 +99,52 @@ phases of studies.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="basic-usage-logistic-regression">Basic usage — logistic regression<a class="anchor" aria-label="anchor" href="#basic-usage-logistic-regression"></a>
+<h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h2>
+<p>All examples use <code>colon_s</code> from the <code>finalfit</code>
+package — 929 patients with colon cancer from the North Central Cancer
+Treatment Group (NCCTG) trial (Moertel et al., <em>NEJM</em> 1990). The
+research question throughout is whether having &gt;4 positive lymph
+nodes (<code>node4</code>) increases the risk of 5-year mortality,
+before and after adjusting for patient and tumour characteristics.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/chrisvarghese/ggadjustedforest" class="external-link">ggadjustedforest</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; ggadjustedforest 0.1.0 -- Forest plots for exposure effects, hiding confounders by design.</span></span>
 <span><span class="co">#&gt; See `?gg_adjusted_forest` to get started.</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ewenharrison/finalfit" class="external-link">finalfit</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span>
-<span><span class="va">mtcars</span><span class="op">$</span><span class="va">am</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">$</span><span class="va">am</span><span class="op">)</span>   <span class="co"># binary outcome: automatic (0) vs manual (1)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">colon_s</span><span class="op">)</span></span>
+<span><span class="va">colon_s</span><span class="op">$</span><span class="va">died_5yr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">colon_s</span><span class="op">$</span><span class="va">mort_5yr</span> <span class="op">==</span> <span class="st">"Died"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data       <span class="op">=</span> <span class="va">mtcars</span>,</span>
-<span>  outcome    <span class="op">=</span> <span class="st">"am"</span>,</span>
-<span>  exposure   <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wt"</span>, <span class="st">"cyl"</span><span class="op">)</span>,</span>
-<span>  model_type <span class="op">=</span> <span class="st">"logistic"</span>,</span>
-<span>  title      <span class="op">=</span> <span class="st">"Effect of Horsepower on Transmission Type"</span></span>
-<span><span class="op">)</span></span>
+<span><span class="va">confounders</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"sex.factor"</span>, <span class="st">"extent.factor"</span>, <span class="st">"differ.factor"</span>, <span class="st">"surg.factor"</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="basic-usage-logistic-regression">Basic usage — logistic regression<a class="anchor" aria-label="anchor" href="#basic-usage-logistic-regression"></a>
+</h2>
+<p>The pipe-friendly API puts <code>data</code> first so the function
+composes naturally with <code>|&gt;</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="va">colon_s</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
+<span>    outcome    <span class="op">=</span> <span class="st">"died_5yr"</span>,</span>
+<span>    exposure   <span class="op">=</span> <span class="st">"node4"</span>,</span>
+<span>    covariates <span class="op">=</span> <span class="va">confounders</span>,</span>
+<span>    model_type <span class="op">=</span> <span class="st">"logistic"</span>,</span>
+<span>    title      <span class="op">=</span> <span class="st">"Effect of Lymph Node Involvement (&gt;4 nodes) on 5-Year Mortality"</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">table</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 6</span></span></span>
-<span><span class="co">#&gt;   model      estimate conf.low conf.high p.value     n</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Unadjusted    0.992    0.979      1.00  0.181     32</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Adjusted      1.03     1.00       1.09  0.084<span style="text-decoration: underline;">0</span>    32</span></span></code></pre></div>
+<span><span class="co">#&gt;   model      estimate conf.low conf.high  p.value     n</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Unadjusted     3.99     2.94      5.46 1.81<span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>   915</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Adjusted       3.98     2.87      5.55 1.91<span style="color: #949494;">e</span><span style="color: #BB0000;">-16</span>   876</span></span></code></pre></div>
 <p>The returned object has three components:</p>
 <table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
 <thead><tr class="header">
 <th>Component</th>
 <th>Contents</th>
@@ -136,16 +156,16 @@ phases of studies.</p>
 </tr>
 <tr class="even">
 <td><code>$table</code></td>
-<td>Numeric data frame</td>
+<td>Tibble of numeric estimates</td>
 </tr>
 <tr class="odd">
 <td><code>$formatted_table</code></td>
-<td>Character table with formatted CI strings</td>
+<td>Tibble with formatted “OR (lower–upper)” strings</td>
 </tr>
 </tbody>
 </table>
 <p>To render the plot:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/plot-logistic-1.png" class="r-plt" alt="" width="672"></p>
 <hr>
@@ -155,44 +175,40 @@ phases of studies.</p>
 </h2>
 <p>When you want to visualise how the effect estimate changes as
 confounders are added sequentially — a common presentation in
-epidemiological reporting — use <code>cumulative = TRUE</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result_cum</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data       <span class="op">=</span> <span class="va">mtcars</span>,</span>
-<span>  outcome    <span class="op">=</span> <span class="st">"am"</span>,</span>
-<span>  exposure   <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wt"</span>, <span class="st">"cyl"</span>, <span class="st">"disp"</span><span class="op">)</span>,</span>
-<span>  cumulative <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  title      <span class="op">=</span> <span class="st">"Cumulative adjustment: hp on transmission"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">result_cum</span><span class="op">$</span><span class="va">formatted_table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"formatted"</span>, <span class="st">"p.value"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 3</span></span></span>
-<span><span class="co">#&gt;   model             formatted                                            p.value</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Unadjusted        0.99 (0.98–1.00)                                     0.181  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> + wt              1.04 (1.01–1.09)                                     0.041  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> + wt + cyl        1.03 (1.00–1.09)                                     0.084  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> + wt + cyl + disp 582250.76 (0.00–34276667019411821430816467159897275… 0.996</span></span></code></pre></div>
-<p>You can rename the rows with <code>cumulative_labels</code>:</p>
+epidemiological reporting — use <code>cumulative = TRUE</code>. Use
+<code>cumulative_labels</code> to provide human-readable row names:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Unadjusted"</span>         <span class="op">=</span> <span class="st">"Crude"</span>,</span>
-<span>  <span class="st">"+ wt"</span>               <span class="op">=</span> <span class="st">"Adjusted for weight"</span>,</span>
-<span>  <span class="st">"+ wt + cyl"</span>         <span class="op">=</span> <span class="st">"Adjusted for weight + cylinders"</span>,</span>
-<span>  <span class="st">"+ wt + cyl + disp"</span>  <span class="op">=</span> <span class="st">"Fully adjusted"</span></span>
+<code class="sourceCode R"><span><span class="va">result_cum</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
+<span>  data       <span class="op">=</span> <span class="va">colon_s</span>,</span>
+<span>  outcome    <span class="op">=</span> <span class="st">"died_5yr"</span>,</span>
+<span>  exposure   <span class="op">=</span> <span class="st">"node4"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="va">confounders</span>,</span>
+<span>  model_type <span class="op">=</span> <span class="st">"logistic"</span>,</span>
+<span>  cumulative <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  cumulative_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Unadjusted"</span>                                                         <span class="op">=</span> <span class="st">"Unadjusted"</span>,</span>
+<span>    <span class="st">"+ age"</span>                                                              <span class="op">=</span> <span class="st">"+ Age"</span>,</span>
+<span>    <span class="st">"+ age + sex.factor"</span>                                                 <span class="op">=</span> <span class="st">"+ Sex"</span>,</span>
+<span>    <span class="st">"+ age + sex.factor + extent.factor"</span>                                 <span class="op">=</span> <span class="st">"+ Extent of spread"</span>,</span>
+<span>    <span class="st">"+ age + sex.factor + extent.factor + differ.factor"</span>                 <span class="op">=</span> <span class="st">"+ Tumour differentiation"</span>,</span>
+<span>    <span class="st">"+ age + sex.factor + extent.factor + differ.factor + surg.factor"</span>   <span class="op">=</span> <span class="st">"+ Time from surgery"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  title <span class="op">=</span> <span class="st">"Cumulative Adjustment: Lymph Node Involvement on 5-Year Mortality"</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">result_cum2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data              <span class="op">=</span> <span class="va">mtcars</span>,</span>
-<span>  outcome           <span class="op">=</span> <span class="st">"am"</span>,</span>
-<span>  exposure          <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>  covariates        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wt"</span>, <span class="st">"cyl"</span>, <span class="st">"disp"</span><span class="op">)</span>,</span>
-<span>  cumulative        <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  cumulative_labels <span class="op">=</span> <span class="va">labels</span>,</span>
-<span>  title             <span class="op">=</span> <span class="st">"Cumulative adjustment with custom labels"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">result_cum2</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/cumulative-labels-1.png" class="r-plt" alt="" width="672"></p>
+<span><span class="va">result_cum</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
+<p><img src="introduction_files/figure-html/cumulative-1.png" class="r-plt" alt="" width="672"></p>
+<p>The numeric table is available for downstream use:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_cum</span><span class="op">$</span><span class="va">formatted_table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"formatted"</span>, <span class="st">"p.value"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
+<span><span class="co">#&gt;   model                    formatted        p.value</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Unadjusted               3.99 (2.94–5.46) &lt;0.001 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> + Age                    4.07 (2.99–5.58) &lt;0.001 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> + Sex                    4.07 (2.99–5.59) &lt;0.001 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> + Extent of spread       4.00 (2.92–5.52) &lt;0.001 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> + Tumour differentiation 3.89 (2.82–5.40) &lt;0.001 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> + Time from surgery      3.98 (2.87–5.55) &lt;0.001</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -200,75 +216,19 @@ epidemiological reporting — use <code>cumulative = TRUE</code>:</p>
 </h2>
 <p>For time-to-event outcomes supply <code>model_type = "coxph"</code>
 along with <code>time_var</code> and <code>event_var</code>:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">lung</span> <span class="op">&lt;-</span> <span class="fu">survival</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/survival/man/lung.html" class="external-link">lung</a></span></span>
-<span><span class="va">lung</span><span class="op">$</span><span class="va">status01</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">lung</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">lung</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="va">lung</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"status01"</span>, <span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"ph.ecog"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">result_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data       <span class="op">=</span> <span class="va">lung</span>,</span>
-<span>  outcome    <span class="op">=</span> <span class="st">"status01"</span>,</span>
-<span>  exposure   <span class="op">=</span> <span class="st">"age"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sex"</span>, <span class="st">"ph.ecog"</span><span class="op">)</span>,</span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
+<span>  data       <span class="op">=</span> <span class="va">colon_s</span>,</span>
+<span>  outcome    <span class="op">=</span> <span class="st">"status"</span>,</span>
+<span>  exposure   <span class="op">=</span> <span class="st">"node4"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="va">confounders</span>,</span>
 <span>  model_type <span class="op">=</span> <span class="st">"coxph"</span>,</span>
-<span>  time_var   <span class="op">=</span> <span class="st">"time"</span>,</span>
-<span>  event_var  <span class="op">=</span> <span class="st">"status01"</span>,</span>
-<span>  title      <span class="op">=</span> <span class="st">"Effect of Age on Survival (lung cancer)"</span></span>
+<span>  time_var   <span class="op">=</span> <span class="st">"time.years"</span>,</span>
+<span>  event_var  <span class="op">=</span> <span class="st">"status"</span>,</span>
+<span>  title      <span class="op">=</span> <span class="st">"Hazard of Death by Lymph Node Involvement (Cox model)"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result_cox</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/cox-1.png" class="r-plt" alt="" width="672"></p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="customising-appearance">Customising appearance<a class="anchor" aria-label="anchor" href="#customising-appearance"></a>
-</h2>
-<p>All the major aesthetic parameters are exposed:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data           <span class="op">=</span> <span class="va">mtcars</span>,</span>
-<span>  outcome        <span class="op">=</span> <span class="st">"am"</span>,</span>
-<span>  exposure       <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>  covariates     <span class="op">=</span> <span class="st">"wt"</span>,</span>
-<span>  model_type     <span class="op">=</span> <span class="st">"logistic"</span>,</span>
-<span>  color          <span class="op">=</span> <span class="st">"#2166ac"</span>,</span>
-<span>  point_size     <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  point_shape    <span class="op">=</span> <span class="fl">18</span>,          <span class="co"># diamond</span></span>
-<span>  vline_color    <span class="op">=</span> <span class="st">"firebrick"</span>,</span>
-<span>  vline_linetype <span class="op">=</span> <span class="st">"dotted"</span>,</span>
-<span>  x_breaks       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.9</span>, <span class="fl">1.0</span>, <span class="fl">1.1</span><span class="op">)</span>,</span>
-<span>  title          <span class="op">=</span> <span class="st">"Custom aesthetics"</span></span>
-<span><span class="op">)</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/custom-1.png" class="r-plt" alt="" width="672"></p>
-<p>For linear models the x-axis is on the original scale (not log):</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data       <span class="op">=</span> <span class="va">mtcars</span>,</span>
-<span>  outcome    <span class="op">=</span> <span class="st">"mpg"</span>,</span>
-<span>  exposure   <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wt"</span>, <span class="st">"cyl"</span><span class="op">)</span>,</span>
-<span>  model_type <span class="op">=</span> <span class="st">"linear"</span>,</span>
-<span>  title      <span class="op">=</span> <span class="st">"Effect of Horsepower on Fuel Efficiency"</span></span>
-<span><span class="op">)</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/linear-1.png" class="r-plt" alt="" width="672"></p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="extracting-the-table-only">Extracting the table only<a class="anchor" aria-label="anchor" href="#extracting-the-table-only"></a>
-</h2>
-<p>Use <code><a href="../reference/forest_table.html">forest_table()</a></code> when you only need the numbers:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/forest_table.html">forest_table</a></span><span class="op">(</span></span>
-<span>  data       <span class="op">=</span> <span class="va">mtcars</span>,</span>
-<span>  outcome    <span class="op">=</span> <span class="st">"am"</span>,</span>
-<span>  exposure   <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wt"</span>, <span class="st">"cyl"</span><span class="op">)</span>,</span>
-<span>  model_type <span class="op">=</span> <span class="st">"logistic"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 6</span></span></span>
-<span><span class="co">#&gt;   model      estimate ci        formatted        p.value     n</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Unadjusted 0.99     0.98–1.00 0.99 (0.98–1.00) 0.181      32</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Adjusted   1.03     1.00–1.09 1.03 (1.00–1.09) 0.084      32</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -280,33 +240,69 @@ specified model, and bundling them into a single function call obscures
 that. Instead, fit each outcome separately and stack the plots with
 <code>patchwork</code>, which is already a dependency of
 <code>ggadjustedforest</code>:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span>
-<span><span class="va">mtcars</span><span class="op">$</span><span class="va">am</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">$</span><span class="va">am</span><span class="op">)</span></span>
-<span><span class="va">mtcars</span><span class="op">$</span><span class="va">vs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">$</span><span class="va">vs</span><span class="op">)</span></span>
+<span><span class="va">colon_s</span><span class="op">$</span><span class="va">died_all</span> <span class="op">&lt;-</span> <span class="va">colon_s</span><span class="op">$</span><span class="va">status</span></span>
 <span></span>
-<span><span class="co"># Extract $plot — patchwork composes ggplot2 objects directly</span></span>
-<span><span class="va">p_am</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">mtcars</span>, outcome <span class="op">=</span> <span class="st">"am"</span>, exposure <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wt"</span>, <span class="st">"cyl"</span><span class="op">)</span>, model_type <span class="op">=</span> <span class="st">"logistic"</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Transmission"</span>, show_table <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="va">p_5yr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">colon_s</span>, outcome <span class="op">=</span> <span class="st">"died_5yr"</span>, exposure <span class="op">=</span> <span class="st">"node4"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="va">confounders</span>, model_type <span class="op">=</span> <span class="st">"logistic"</span>,</span>
+<span>  title <span class="op">=</span> <span class="st">"5-Year Mortality"</span>, show_table <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span><span class="op">$</span><span class="va">plot</span></span>
 <span></span>
-<span><span class="va">p_vs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">mtcars</span>, outcome <span class="op">=</span> <span class="st">"vs"</span>, exposure <span class="op">=</span> <span class="st">"hp"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wt"</span>, <span class="st">"cyl"</span><span class="op">)</span>, model_type <span class="op">=</span> <span class="st">"logistic"</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Engine Shape"</span>, show_table <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="va">p_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">colon_s</span>, outcome <span class="op">=</span> <span class="st">"died_all"</span>, exposure <span class="op">=</span> <span class="st">"node4"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="va">confounders</span>, model_type <span class="op">=</span> <span class="st">"logistic"</span>,</span>
+<span>  title <span class="op">=</span> <span class="st">"Death (all follow-up)"</span>, show_table <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span><span class="op">$</span><span class="va">plot</span></span>
 <span></span>
-<span><span class="va">p_am</span> <span class="op">/</span> <span class="va">p_vs</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/multi-patchwork-1.png" class="r-plt" alt="" width="960"></p>
+<span><span class="va">p_5yr</span> <span class="op">/</span> <span class="va">p_all</span></span></code></pre></div>
+<p><img src="introduction_files/figure-html/multi-patchwork-1.png" class="r-plt" alt="" width="672"></p>
 <p>This approach gives full control over each panel — different
 covariate sets, model types, or axis scales per outcome. The
 <code>/</code> operator stacks plots vertically; use <code>|</code> for
-side-by-side. Pass <code>plot_layout(guides = "collect")</code> to share
-a legend if needed.</p>
+side-by-side.</p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="customising-appearance">Customising appearance<a class="anchor" aria-label="anchor" href="#customising-appearance"></a>
+</h2>
+<p>All the major aesthetic parameters are exposed:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
+<span>  data           <span class="op">=</span> <span class="va">colon_s</span>,</span>
+<span>  outcome        <span class="op">=</span> <span class="st">"died_5yr"</span>,</span>
+<span>  exposure       <span class="op">=</span> <span class="st">"node4"</span>,</span>
+<span>  covariates     <span class="op">=</span> <span class="va">confounders</span>,</span>
+<span>  model_type     <span class="op">=</span> <span class="st">"logistic"</span>,</span>
+<span>  color          <span class="op">=</span> <span class="st">"#2166ac"</span>,</span>
+<span>  point_size     <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  point_shape    <span class="op">=</span> <span class="fl">18</span>,</span>
+<span>  vline_color    <span class="op">=</span> <span class="st">"firebrick"</span>,</span>
+<span>  vline_linetype <span class="op">=</span> <span class="st">"dotted"</span>,</span>
+<span>  title          <span class="op">=</span> <span class="st">"Custom aesthetics"</span></span>
+<span><span class="op">)</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
+<p><img src="introduction_files/figure-html/custom-1.png" class="r-plt" alt="" width="672"></p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="extracting-the-table-only">Extracting the table only<a class="anchor" aria-label="anchor" href="#extracting-the-table-only"></a>
+</h2>
+<p>Use <code><a href="../reference/forest_table.html">forest_table()</a></code> when you only need the numbers:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/forest_table.html">forest_table</a></span><span class="op">(</span></span>
+<span>  data       <span class="op">=</span> <span class="va">colon_s</span>,</span>
+<span>  outcome    <span class="op">=</span> <span class="st">"died_5yr"</span>,</span>
+<span>  exposure   <span class="op">=</span> <span class="st">"node4"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="va">confounders</span>,</span>
+<span>  model_type <span class="op">=</span> <span class="st">"logistic"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 6</span></span></span>
+<span><span class="co">#&gt;   model      estimate ci        formatted        p.value     n</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Unadjusted 3.99     2.94–5.46 3.99 (2.94–5.46) &lt;0.001    915</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Adjusted   3.98     2.87–5.55 3.98 (2.87–5.55) &lt;0.001    876</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -315,6 +311,9 @@ a legend if needed.</p>
 <ul>
 <li>Hernán MA, Robins JM (2020). <em>Causal Inference: What If</em>.
 Chapman &amp; Hall/CRC.</li>
+<li>Moertel CG et al. (1990). Levamisole and fluorouracil for adjuvant
+therapy of resected colon carcinoma. <em>N Engl J Med</em> 322(6):
+352–358.</li>
 <li>Vandenbroucke JP et al. (2007). Strengthening the Reporting of
 Observational Studies in Epidemiology (STROBE). <em>PLoS Med</em> 4(10):
 e297.</li>
