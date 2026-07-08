@@ -7,3 +7,5 @@ inst/doc
 ..Rcheck/
 *.tar.gz
 tests/testthat/Rplots.pdf
+*.png
+Rplots.pdf

@@ -404,9 +404,10 @@ build_multi_table_plot <- function(combined_table, outcome_names, table_digits) 
   combined_table$y_pos <- seq(n_rows, 1)
 
   tbl_df <- data.frame(
-    x     = c(rep(0.15, n_rows), rep(0.75, n_rows)),
+    x     = c(rep(0.02, n_rows), rep(0.72, n_rows)),
     y     = rep(combined_table$y_pos, 2),
     label = c(combined_table$formatted, combined_table$p.value),
+    hjust = c(rep(0, n_rows), rep(0, n_rows)),
     stringsAsFactors = FALSE
   )
 
@@ -437,9 +438,10 @@ build_multi_table_plot <- function(combined_table, outcome_names, table_digits) 
   y_min <- 0.5
 
   hdr <- data.frame(
-    x        = c(0.15, 0.75),
+    x        = c(0.02, 0.72),
     y        = n_rows + 1,
     label    = c("Estimate (95% CI)", "p-value"),
+    hjust    = c(0, 0),
     stringsAsFactors = FALSE
   )
 
@@ -447,16 +449,14 @@ build_multi_table_plot <- function(combined_table, outcome_names, table_digits) 
     ggplot2::geom_text(
       data = tbl_df,
       ggplot2::aes(x = .data[["x"]], y = .data[["y"]],
-                   label = .data[["label"]]),
-      size  = 3.5,
-      hjust = 0.5
+                   label = .data[["label"]], hjust = .data[["hjust"]]),
+      size = 3.5
     ) +
     ggplot2::geom_text(
       data = hdr,
       ggplot2::aes(x = .data[["x"]], y = .data[["y"]],
-                   label = .data[["label"]]),
+                   label = .data[["label"]], hjust = .data[["hjust"]]),
       size     = 3.5,
-      hjust    = 0.5,
       fontface = "bold"
     ) +
     ggplot2::scale_x_continuous(limits = c(0, 1)) +

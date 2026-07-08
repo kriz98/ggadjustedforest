@@ -438,19 +438,22 @@ build_table_plot <- function(formatted_tbl, table_digits) {
   # Replace middle block with formatted CI
   tbl_df$label[seq(n_rows + 1, 2 * n_rows)] <- formatted_tbl$formatted
 
-  # Actually just use two columns: estimate(CI) and p
+  # Two columns: estimate (CI) left-aligned, p-value right-aligned
+  # x in [0, 1]; left-align both to avoid clipping at panel edge
   tbl_df2 <- data.frame(
-    x     = c(rep(0.15, n_rows), rep(0.75, n_rows)),
+    x     = c(rep(0.02, n_rows), rep(0.72, n_rows)),
     y     = rep(formatted_tbl$y_pos, 2),
     label = c(formatted_tbl$formatted, formatted_tbl$p.value),
+    hjust = c(rep(0, n_rows), rep(0, n_rows)),
     stringsAsFactors = FALSE
   )
 
   # Header
   hdr <- data.frame(
-    x     = c(0.15, 0.75),
-    y     = n_rows + 1,
-    label = c("Estimate (95% CI)", "p-value"),
+    x        = c(0.02, 0.72),
+    y        = n_rows + 1,
+    label    = c("Estimate (95% CI)", "p-value"),
+    hjust    = c(0, 0),
     fontface = "bold",
     stringsAsFactors = FALSE
   )
@@ -459,16 +462,14 @@ build_table_plot <- function(formatted_tbl, table_digits) {
     ggplot2::geom_text(
       data = tbl_df2,
       ggplot2::aes(x = .data[["x"]], y = .data[["y"]],
-                   label = .data[["label"]]),
-      size  = 3.5,
-      hjust = 0.5
+                   label = .data[["label"]], hjust = .data[["hjust"]]),
+      size = 3.5
     ) +
     ggplot2::geom_text(
       data = hdr,
       ggplot2::aes(x = .data[["x"]], y = .data[["y"]],
-                   label = .data[["label"]]),
+                   label = .data[["label"]], hjust = .data[["hjust"]]),
       size     = 3.5,
-      hjust    = 0.5,
       fontface = "bold"
     ) +
     ggplot2::scale_x_continuous(limits = c(0, 1)) +
