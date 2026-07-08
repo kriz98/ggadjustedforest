@@ -7,3 +7,6 @@
 ^\.gitignore$
 ^Rplots\.pdf$
 ^CRAN-SUBMISSION$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
