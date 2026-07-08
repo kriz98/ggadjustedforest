@@ -75,6 +75,8 @@ to \code{1} for ratio models and \code{0} for linear.}
 
 \item{color}{Character. Colour for points and CI lines. Default \code{"black"}.}
 
+\item{colour}{Alias for \code{color} (British English spelling).}
+
 \item{vline_color}{Character. Colour of the reference line. Default
 \code{"grey50"}.}
 

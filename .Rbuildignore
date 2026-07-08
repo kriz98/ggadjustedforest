@@ -5,4 +5,5 @@
 ^README\.Rmd$
 ^\.github$
 ^\.gitignore$
-^NEWS\.md$
+^Rplots\.pdf$
+^CRAN-SUBMISSION$

@@ -31,6 +31,7 @@
 #' @param point_shape Integer. ggplot2 shape code. Default `15` (filled square).
 #' @param line_size Numeric. Thickness of the CI lines. Default `0.7`.
 #' @param color Character. Colour for points and CI lines. Default `"black"`.
+#' @param colour Alias for `color` (British English spelling).
 #' @param vline_color Character. Colour of the reference line. Default
 #'   `"grey50"`.
 #' @param vline_linetype Character. Linetype of the reference line. Default
