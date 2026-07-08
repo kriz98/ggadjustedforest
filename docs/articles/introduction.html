@@ -76,29 +76,33 @@
 <div class="section level2">
 <h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
-<p>When a study asks about the causal effect of a single
-<strong>exposure</strong> on an outcome, the coefficients for adjustment
-covariates (confounders) are almost never the quantities of interest.
-Reporting them can even mislead readers, because confounder coefficients
-are not identified under the causal model — they absorb collider bias,
-mediation pathways, and other artefacts depending on the causal
-structure (Hernán &amp; Robins, <em>Causal Inference: What If</em>,
-2020; Westreich &amp; Greenland, <em>Am J Epidemiol</em>, 2013).</p>
+<p>When building multivariable models for causal inference, there is an
+<strong>exposure</strong> of interest for which a causal estimand
+applies to. The coefficients for adjusted covariates (confounders) can
+however be misinterpreted when presented together with the estimand of
+interest. Reporting them can even mislead readers, because confounder
+coefficients are not identified under the causal model, and are
+susceptible to absorbing collider bias, mediation pathways, and other
+artefacts depending on causal structures (Hernán &amp; Robins,
+<em>Causal Inference: What If</em>, 2020; Westreich &amp; Greenland,
+<em>Am J Epidemiol</em>, 2013).</p>
 <p>STROBE guidelines (Vandenbroucke et al., 2007) and recent work on the
 <strong>estimand framework</strong> (ICH E9(R1), 2019) both emphasise
 that reporting should clearly distinguish the target quantity from
 nuisance parameters.</p>
-<p><code>ggadjustedforest</code> operationalises this principle: it fits
-the models you specify but <strong>only exposes the exposure
-coefficient</strong> in both the plot and the table, hiding confounder
-estimates by design.</p>
+<p><code>ggadjustedforest</code> operationalises this principle and fits
+the models you specify but <strong>only exposes the coefficient of
+interest</strong> in both the plot and the table, hiding confounder
+estimates by design. We also provide a cumulative adjustment option, to
+show the effect of adjustment and model building during exploratory
+phases of studies.</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="basic-usage-logistic-regression">Basic usage — logistic regression<a class="anchor" aria-label="anchor" href="#basic-usage-logistic-regression"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/chrisvarghese/ggadjustedforest" class="external-link">ggadjustedforest</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/kriz98/gg_adjusted_forest" class="external-link">ggadjustedforest</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; ggadjustedforest 0.1.0 -- Forest plots for exposure effects, hiding confounders by design.</span></span>
 <span><span class="co">#&gt; See `?gg_adjusted_forest` to get started.</span></span>
 <span></span>
