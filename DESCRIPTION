@@ -1,7 +1,7 @@
 Package: ggadjustedforest
-Title: Forest Plots Showing Adjusted and Unadjusted Effects for a Single Exposure
+Title: Publication Ready Forest Plots for Estimand of Interest
 Version: 0.1.0
-Authors@R: person("Chris", "Varghese", email = "c.varghese@auckland.ac.nz",
+Authors@R: person("Chris", "Varghese", email = "chris.varghese@auckland.ac.nz",
     role = c("aut", "cre"), comment = c(ORCID = ""))
 Description: Creates publication-quality forest plots and effect-size tables that
     display only the unadjusted and adjusted estimates for a user-specified exposure
@@ -11,6 +11,7 @@ Description: Creates publication-quality forest plots and effect-size tables tha
     'ggplot2' and follows the tidyverse design philosophy.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-GB
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
 Depends: R (>= 4.1.0)
@@ -32,5 +33,5 @@ Suggests:
     finalfit
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://github.com/chrisvarghese/ggadjustedforest
-BugReports: https://github.com/chrisvarghese/ggadjustedforest/issues
+URL: https://github.com/kriz98/gg_adjusted_forest
+BugReports: https://github.com/kriz98/gg_adjusted_forest/issues
