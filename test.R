@@ -78,22 +78,34 @@ cumulative_result$plot
 # The estimate barely moves across adjustment steps, suggesting node4 is not
 # heavily confounded by these patient/tumour characteristics.
 
-# ── 3. Multiple outcomes side-by-side ─────────────────────────────────────────
-multi_result <- gg_multi_outcome_forest(
+# ── 3. Multiple outcomes — panel with cowplot::plot_grid() ────────────────────
+# Each outcome is fitted independently, then panels are combined externally.
+# This keeps each model fully specified and avoids false coupling of outcomes.
+library(cowplot)
+
+# Extract $plot — cowplot works with ggplot2 objects, not the ggadjustedforest wrapper
+p_5yr <- gg_adjusted_forest(
   data       = colon_s,
-  outcomes   = c(
-    "5-Year Mortality" = "died_5yr",
-    "Death (all)"      = "died_all"
-  ),
+  outcome    = "died_5yr",
   exposure   = "node4",
   covariates = confounders,
   model_type = "logistic",
-  title      = "Effect of Lymph Node Involvement (>4 nodes) Across Outcomes",
-  colour     = "black"   # British spelling accepted (manifesto principle 4)
-)
+  title      = "5-Year Mortality",
+  show_table = FALSE
+)$plot
 
-multi_result$plot
-multi_result$combined_table  # tibble, ready for export or further dplyr manipulation
+p_all <- gg_adjusted_forest(
+  data       = colon_s,
+  outcome    = "died_all",
+  exposure   = "node4",
+  covariates = confounders,
+  model_type = "logistic",
+  title      = "Death (all follow-up)",
+  show_table = FALSE
+)$plot
+
+# align = "v" + axis = "lr" keeps y-axis labels vertically aligned
+cowplot::plot_grid(p_5yr, p_all, ncol = 1, align = "v", axis = "lr")
 
 # ── 4. Cox proportional hazards (survival outcome) ────────────────────────────
 # colon_s$time.years = time to death/censoring; status = died (0/1)
@@ -119,9 +131,11 @@ result$formatted_table |>
   select(model, formatted, p.value)
 
 # ── 6. Save plots ─────────────────────────────────────────────────────────────
+multi_panel <- cowplot::plot_grid(p_5yr, p_all, ncol = 1, align = "v", axis = "lr")
+
 ggplot2::ggsave("plot_adjusted.png",   result$plot,           width = 9, height = 3.5, dpi = 300)
 ggplot2::ggsave("plot_cumulative.png", cumulative_result$plot, width = 9, height = 6,   dpi = 300)
-ggplot2::ggsave("plot_multi.png",      multi_result$plot,     width = 9, height = 5,   dpi = 300)
+ggplot2::ggsave("plot_multi.png",      multi_panel,           width = 9, height = 6,   dpi = 300)
 ggplot2::ggsave("plot_cox.png",        cox_result$plot,       width = 9, height = 3.5, dpi = 300)
 
 cat("\nAll plots saved.\n")

@@ -192,56 +192,40 @@ forest_table(
 
 ## Comparing multiple outcomes side-by-side
 
-When a study examines one exposure across several outcomes (e.g. 30-day
-mortality, failure to rescue, and major complications), `gg_multi_outcome_forest()`
-produces a single faceted plot with one panel per outcome.
+`ggadjustedforest` intentionally does not provide a built-in multi-outcome
+wrapper. Each outcome deserves its own carefully specified model, and bundling
+them into a single function call obscures that. Instead, fit each outcome
+separately and panel the plots using
+[`cowplot::plot_grid()`](https://wilkelab.org/cowplot/):
 
-### Simple mode
+```{r multi-cowplot, warning=FALSE, fig.height=5, fig.width=10}
+# install.packages("cowplot")  # if needed
+library(cowplot)
 
-All outcomes share the same exposure, covariates, and model type.
-
-```{r multi-simple, warning=FALSE, fig.height=5}
+data(mtcars)
 mtcars$am <- as.integer(mtcars$am)
 mtcars$vs <- as.integer(mtcars$vs)
 
-multi_res <- gg_multi_outcome_forest(
-  data       = mtcars,
-  outcomes   = c("Transmission" = "am", "Engine Shape" = "vs"),
-  exposure   = "hp",
-  covariates = c("wt", "cyl"),
-  model_type = "logistic",
-  title      = "Effect of Horsepower on Two Outcomes",
-  show_table = FALSE
-)
-multi_res$plot
-```
-
-The combined table is available for export:
-
-```{r multi-table}
-multi_res$combined_table[, c("outcome", "model", "formatted", "p.value")]
-```
-
-### Advanced mode
-
-When outcomes require different covariate sets or model types, fit each one
-separately with `gg_adjusted_forest()` and pass the results as a named list.
-
-```{r multi-advanced, warning=FALSE, fig.height=5}
-r_am <- gg_adjusted_forest(mtcars, "am", "hp", covariates = "wt",
-                            show_table = FALSE)
-r_vs <- gg_adjusted_forest(mtcars, "vs", "hp", covariates = c("wt", "cyl"),
-                            show_table = FALSE)
-
-gg_multi_outcome_forest(
-  outcome_list = list("Transmission" = r_am, "Engine Shape" = r_vs),
-  title        = "Advanced mode: per-outcome covariate sets",
-  show_table   = FALSE
+# Extract $plot — cowplot takes ggplot2 objects, not the ggadjustedforest wrapper
+p_am <- gg_adjusted_forest(
+  data = mtcars, outcome = "am", exposure = "hp",
+  covariates = c("wt", "cyl"), model_type = "logistic",
+  title = "Transmission", show_table = FALSE
 )$plot
+
+p_vs <- gg_adjusted_forest(
+  data = mtcars, outcome = "vs", exposure = "hp",
+  covariates = c("wt", "cyl"), model_type = "logistic",
+  title = "Engine Shape", show_table = FALSE
+)$plot
+
+cowplot::plot_grid(p_am, p_vs, ncol = 1, align = "v", axis = "lr")
 ```
 
-The `free_x = TRUE` argument allows each facet to use its own x-axis scale —
-useful when outcomes are on different scales (e.g. OR and HR side-by-side).
+This approach gives full control over each panel — different covariate sets,
+model types, or axis scales per outcome — and composes cleanly with any other
+ggplot2 object via `cowplot`. Use `align = "v"` with `axis = "lr"` to keep
+the y-axis labels aligned across panels.
 
 ---
 

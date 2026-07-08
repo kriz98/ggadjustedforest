@@ -19,6 +19,7 @@ gg_adjusted_forest(
   point_shape = 15,
   line_size = 0.7,
   color = "black",
+  colour = NULL,
   vline_color = "grey50",
   vline_linetype = "dashed",
   x_limits = NULL,
