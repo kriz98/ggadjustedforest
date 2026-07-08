@@ -33,53 +33,51 @@ and model building during exploratory phases of studies.
 
 ------------------------------------------------------------------------
 
-## Basic usage — logistic regression
+## Data
+
+All examples use `colon_s` from the `finalfit` package — 929 patients
+with colon cancer from the North Central Cancer Treatment Group (NCCTG)
+trial (Moertel et al., *NEJM* 1990). The research question throughout is
+whether having \>4 positive lymph nodes (`node4`) increases the risk of
+5-year mortality, before and after adjusting for patient and tumour
+characteristics.
 
 ``` r
 
 library(ggadjustedforest)
 #> ggadjustedforest 0.1.0 -- Forest plots for exposure effects, hiding confounders by design.
 #> See `?gg_adjusted_forest` to get started.
+library(finalfit)
 
-data(mtcars)
-mtcars$am <- as.integer(mtcars$am)   # binary outcome: automatic (0) vs manual (1)
+data(colon_s)
+colon_s$died_5yr <- as.integer(colon_s$mort_5yr == "Died")
 
-result <- gg_adjusted_forest(
-  data       = mtcars,
-  outcome    = "am",
-  exposure   = "hp",
-  covariates = c("wt", "cyl"),
-  model_type = "logistic",
-  title      = "Effect of Horsepower on Transmission Type"
-)
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+confounders <- c("age", "sex.factor", "extent.factor", "differ.factor", "surg.factor")
+```
+
+------------------------------------------------------------------------
+
+## Basic usage — logistic regression
+
+The pipe-friendly API puts `data` first so the function composes
+naturally with `|>`:
+
+``` r
+
+result <- colon_s |>
+  gg_adjusted_forest(
+    outcome    = "died_5yr",
+    exposure   = "node4",
+    covariates = confounders,
+    model_type = "logistic",
+    title      = "Effect of Lymph Node Involvement (>4 nodes) on 5-Year Mortality"
+  )
 result$table
 #> # A tibble: 2 × 6
-#>   model      estimate conf.low conf.high p.value     n
-#>   <fct>         <dbl>    <dbl>     <dbl>   <dbl> <int>
-#> 1 Unadjusted    0.992    0.979      1.00  0.181     32
-#> 2 Adjusted      1.03     1.00       1.09  0.0840    32
+#>   model      estimate conf.low conf.high  p.value     n
+#>   <fct>         <dbl>    <dbl>     <dbl>    <dbl> <int>
+#> 1 Unadjusted     3.99     2.94      5.46 1.81e-18   915
+#> 2 Adjusted       3.98     2.87      5.55 1.91e-16   876
 ```
 
 The returned object has three components:
@@ -87,8 +85,8 @@ The returned object has three components:
 | Component          | Contents                                           |
 |--------------------|----------------------------------------------------|
 | `$plot`            | Combined forest plot + table (ggplot2 / patchwork) |
-| `$table`           | Numeric data frame                                 |
-| `$formatted_table` | Character table with formatted CI strings          |
+| `$table`           | Tibble of numeric estimates                        |
+| `$formatted_table` | Tibble with formatted “OR (lower–upper)” strings   |
 
 To render the plot:
 
@@ -105,152 +103,48 @@ result$plot
 
 When you want to visualise how the effect estimate changes as
 confounders are added sequentially — a common presentation in
-epidemiological reporting — use `cumulative = TRUE`:
+epidemiological reporting — use `cumulative = TRUE`. Use
+`cumulative_labels` to provide human-readable row names:
 
 ``` r
 
 result_cum <- gg_adjusted_forest(
-  data       = mtcars,
-  outcome    = "am",
-  exposure   = "hp",
-  covariates = c("wt", "cyl", "disp"),
+  data       = colon_s,
+  outcome    = "died_5yr",
+  exposure   = "node4",
+  covariates = confounders,
+  model_type = "logistic",
   cumulative = TRUE,
-  title      = "Cumulative adjustment: hp on transmission"
+  cumulative_labels = c(
+    "Unadjusted"                                                         = "Unadjusted",
+    "+ age"                                                              = "+ Age",
+    "+ age + sex.factor"                                                 = "+ Sex",
+    "+ age + sex.factor + extent.factor"                                 = "+ Extent of spread",
+    "+ age + sex.factor + extent.factor + differ.factor"                 = "+ Tumour differentiation",
+    "+ age + sex.factor + extent.factor + differ.factor + surg.factor"   = "+ Time from surgery"
+  ),
+  title = "Cumulative Adjustment: Lymph Node Involvement on 5-Year Mortality"
 )
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: algorithm did not converge
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-result_cum$formatted_table[, c("model", "formatted", "p.value")]
-#> # A tibble: 4 × 3
-#>   model             formatted                                            p.value
-#>   <chr>             <chr>                                                <chr>  
-#> 1 Unadjusted        0.99 (0.98–1.00)                                     0.181  
-#> 2 + wt              1.04 (1.01–1.09)                                     0.041  
-#> 3 + wt + cyl        1.03 (1.00–1.09)                                     0.084  
-#> 4 + wt + cyl + disp 582250.76 (0.00–34276666937888694609352330642219423… 0.996
+result_cum$plot
 ```
 
-You can rename the rows with `cumulative_labels`:
+![](introduction_files/figure-html/cumulative-1.png)
+
+The numeric table is available for downstream use:
 
 ``` r
 
-labels <- c(
-  "Unadjusted"         = "Crude",
-  "+ wt"               = "Adjusted for weight",
-  "+ wt + cyl"         = "Adjusted for weight + cylinders",
-  "+ wt + cyl + disp"  = "Fully adjusted"
-)
-
-result_cum2 <- gg_adjusted_forest(
-  data              = mtcars,
-  outcome           = "am",
-  exposure          = "hp",
-  covariates        = c("wt", "cyl", "disp"),
-  cumulative        = TRUE,
-  cumulative_labels = labels,
-  title             = "Cumulative adjustment with custom labels"
-)
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: algorithm did not converge
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-result_cum2$plot
+result_cum$formatted_table[, c("model", "formatted", "p.value")]
+#> # A tibble: 6 × 3
+#>   model                    formatted        p.value
+#>   <chr>                    <chr>            <chr>  
+#> 1 Unadjusted               3.99 (2.94–5.46) <0.001 
+#> 2 + Age                    4.07 (2.99–5.58) <0.001 
+#> 3 + Sex                    4.07 (2.99–5.59) <0.001 
+#> 4 + Extent of spread       4.00 (2.92–5.52) <0.001 
+#> 5 + Tumour differentiation 3.89 (2.82–5.40) <0.001 
+#> 6 + Time from surgery      3.98 (2.87–5.55) <0.001
 ```
-
-![](introduction_files/figure-html/cumulative-labels-1.png)
 
 ------------------------------------------------------------------------
 
@@ -261,128 +155,20 @@ For time-to-event outcomes supply `model_type = "coxph"` along with
 
 ``` r
 
-lung <- survival::lung
-lung$status01 <- as.integer(lung$status == 2)
-lung <- stats::na.omit(lung[, c("time", "status01", "age", "sex", "ph.ecog")])
-
 result_cox <- gg_adjusted_forest(
-  data       = lung,
-  outcome    = "status01",
-  exposure   = "age",
-  covariates = c("sex", "ph.ecog"),
+  data       = colon_s,
+  outcome    = "status",
+  exposure   = "node4",
+  covariates = confounders,
   model_type = "coxph",
-  time_var   = "time",
-  event_var  = "status01",
-  title      = "Effect of Age on Survival (lung cancer)"
+  time_var   = "time.years",
+  event_var  = "status",
+  title      = "Hazard of Death by Lymph Node Involvement (Cox model)"
 )
 result_cox$plot
 ```
 
 ![](introduction_files/figure-html/cox-1.png)
-
-------------------------------------------------------------------------
-
-## Customising appearance
-
-All the major aesthetic parameters are exposed:
-
-``` r
-
-gg_adjusted_forest(
-  data           = mtcars,
-  outcome        = "am",
-  exposure       = "hp",
-  covariates     = "wt",
-  model_type     = "logistic",
-  color          = "#2166ac",
-  point_size     = 5,
-  point_shape    = 18,          # diamond
-  vline_color    = "firebrick",
-  vline_linetype = "dotted",
-  x_breaks       = c(0.9, 1.0, 1.1),
-  title          = "Custom aesthetics"
-)$plot
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-```
-
-![](introduction_files/figure-html/custom-1.png)
-
-For linear models the x-axis is on the original scale (not log):
-
-``` r
-
-gg_adjusted_forest(
-  data       = mtcars,
-  outcome    = "mpg",
-  exposure   = "hp",
-  covariates = c("wt", "cyl"),
-  model_type = "linear",
-  title      = "Effect of Horsepower on Fuel Efficiency"
-)$plot
-```
-
-![](introduction_files/figure-html/linear-1.png)
-
-------------------------------------------------------------------------
-
-## Extracting the table only
-
-Use
-[`forest_table()`](https://kriz98.github.io/gg_adjusted_forest/reference/forest_table.md)
-when you only need the numbers:
-
-``` r
-
-forest_table(
-  data       = mtcars,
-  outcome    = "am",
-  exposure   = "hp",
-  covariates = c("wt", "cyl"),
-  model_type = "logistic"
-)
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> # A tibble: 2 × 6
-#>   model      estimate ci        formatted        p.value     n
-#>   <chr>      <chr>    <chr>     <chr>            <chr>   <int>
-#> 1 Unadjusted 0.99     0.98–1.00 0.99 (0.98–1.00) 0.181      32
-#> 2 Adjusted   1.03     1.00–1.09 1.03 (1.00–1.09) 0.084      32
-```
 
 ------------------------------------------------------------------------
 
@@ -398,32 +184,77 @@ Instead, fit each outcome separately and stack the plots with
 
 library(patchwork)
 
-data(mtcars)
-mtcars$am <- as.integer(mtcars$am)
-mtcars$vs <- as.integer(mtcars$vs)
+colon_s$died_all <- colon_s$status
 
-# Extract $plot — patchwork composes ggplot2 objects directly
-p_am <- gg_adjusted_forest(
-  data = mtcars, outcome = "am", exposure = "hp",
-  covariates = c("wt", "cyl"), model_type = "logistic",
-  title = "Transmission", show_table = FALSE
+p_5yr <- gg_adjusted_forest(
+  data = colon_s, outcome = "died_5yr", exposure = "node4",
+  covariates = confounders, model_type = "logistic",
+  title = "5-Year Mortality", show_table = FALSE
 )$plot
 
-p_vs <- gg_adjusted_forest(
-  data = mtcars, outcome = "vs", exposure = "hp",
-  covariates = c("wt", "cyl"), model_type = "logistic",
-  title = "Engine Shape", show_table = FALSE
+p_all <- gg_adjusted_forest(
+  data = colon_s, outcome = "died_all", exposure = "node4",
+  covariates = confounders, model_type = "logistic",
+  title = "Death (all follow-up)", show_table = FALSE
 )$plot
 
-p_am / p_vs
+p_5yr / p_all
 ```
 
 ![](introduction_files/figure-html/multi-patchwork-1.png)
 
 This approach gives full control over each panel — different covariate
 sets, model types, or axis scales per outcome. The `/` operator stacks
-plots vertically; use `|` for side-by-side. Pass
-`plot_layout(guides = "collect")` to share a legend if needed.
+plots vertically; use `|` for side-by-side.
+
+------------------------------------------------------------------------
+
+## Customising appearance
+
+All the major aesthetic parameters are exposed:
+
+``` r
+
+gg_adjusted_forest(
+  data           = colon_s,
+  outcome        = "died_5yr",
+  exposure       = "node4",
+  covariates     = confounders,
+  model_type     = "logistic",
+  color          = "#2166ac",
+  point_size     = 5,
+  point_shape    = 18,
+  vline_color    = "firebrick",
+  vline_linetype = "dotted",
+  title          = "Custom aesthetics"
+)$plot
+```
+
+![](introduction_files/figure-html/custom-1.png)
+
+------------------------------------------------------------------------
+
+## Extracting the table only
+
+Use
+[`forest_table()`](https://kriz98.github.io/gg_adjusted_forest/reference/forest_table.md)
+when you only need the numbers:
+
+``` r
+
+forest_table(
+  data       = colon_s,
+  outcome    = "died_5yr",
+  exposure   = "node4",
+  covariates = confounders,
+  model_type = "logistic"
+)
+#> # A tibble: 2 × 6
+#>   model      estimate ci        formatted        p.value     n
+#>   <chr>      <chr>    <chr>     <chr>            <chr>   <int>
+#> 1 Unadjusted 3.99     2.94–5.46 3.99 (2.94–5.46) <0.001    915
+#> 2 Adjusted   3.98     2.87–5.55 3.98 (2.87–5.55) <0.001    876
+```
 
 ------------------------------------------------------------------------
 
@@ -431,6 +262,8 @@ plots vertically; use `|` for side-by-side. Pass
 
 - Hernán MA, Robins JM (2020). *Causal Inference: What If*. Chapman &
   Hall/CRC.
+- Moertel CG et al. (1990). Levamisole and fluorouracil for adjuvant
+  therapy of resected colon carcinoma. *N Engl J Med* 322(6): 352–358.
 - Vandenbroucke JP et al. (2007). Strengthening the Reporting of
   Observational Studies in Epidemiology (STROBE). *PLoS Med* 4(10):
   e297.
