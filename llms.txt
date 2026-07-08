@@ -18,8 +18,9 @@ present the exposure effect cleanly, before and after adjustment.
 
 ``` r
 
-# Install from local source (CRAN submission pending)
-install.packages("path/to/ggadjustedforest", repos = NULL, type = "source")
+# Install from GitHub (CRAN submission pending)
+# install.packages("remotes")
+remotes::install_github("kriz98/gg_adjusted_forest")
 ```
 
 ## Quick start

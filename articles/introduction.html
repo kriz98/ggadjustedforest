@@ -66,6 +66,14 @@
     
     
 <div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install from GitHub (CRAN submission pending)</span></span>
+<span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"kriz98/gg_adjusted_forest"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
 <p>When a study asks about the causal effect of a single
@@ -89,7 +97,7 @@ estimates by design.</p>
 <div class="section level2">
 <h2 id="basic-usage-logistic-regression">Basic usage — logistic regression<a class="anchor" aria-label="anchor" href="#basic-usage-logistic-regression"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/kriz98/gg_adjusted_forest" class="external-link">ggadjustedforest</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; ggadjustedforest 0.1.0 -- Forest plots for exposure effects, hiding confounders by design.</span></span>
 <span><span class="co">#&gt; See `?gg_adjusted_forest` to get started.</span></span>
@@ -155,7 +163,7 @@ estimates by design.</p>
 </tbody>
 </table>
 <p>To render the plot:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/plot-logistic-1.png" class="r-plt" alt="" width="672"></p>
 <hr>
@@ -166,7 +174,7 @@ estimates by design.</p>
 <p>When you want to visualise how the effect estimate changes as
 confounders are added sequentially — a common presentation in
 epidemiological reporting — use <code>cumulative = TRUE</code>:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_cum</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
 <span>  data       <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>  outcome    <span class="op">=</span> <span class="st">"am"</span>,</span>
@@ -234,7 +242,7 @@ epidemiological reporting — use <code>cumulative = TRUE</code>:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> + wt + cyl        1.03 (1.00–1.09)                                     0.084  </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> + wt + cyl + disp 582250.76 (0.00–34276666937888694609352330642219423… 0.996</span></span></code></pre></div>
 <p>You can rename the rows with <code>cumulative_labels</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Unadjusted"</span>         <span class="op">=</span> <span class="st">"Crude"</span>,</span>
 <span>  <span class="st">"+ wt"</span>               <span class="op">=</span> <span class="st">"Adjusted for weight"</span>,</span>
@@ -310,7 +318,7 @@ epidemiological reporting — use <code>cumulative = TRUE</code>:</p>
 </h2>
 <p>For time-to-event outcomes supply <code>model_type = "coxph"</code>
 along with <code>time_var</code> and <code>event_var</code>:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lung</span> <span class="op">&lt;-</span> <span class="fu">survival</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/survival/man/lung.html" class="external-link">lung</a></span></span>
 <span><span class="va">lung</span><span class="op">$</span><span class="va">status01</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">lung</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">lung</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="va">lung</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"status01"</span>, <span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"ph.ecog"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
@@ -333,7 +341,7 @@ along with <code>time_var</code> and <code>event_var</code>:</p>
 <h2 id="customising-appearance">Customising appearance<a class="anchor" aria-label="anchor" href="#customising-appearance"></a>
 </h2>
 <p>All the major aesthetic parameters are exposed:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
 <span>  data           <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>  outcome        <span class="op">=</span> <span class="st">"am"</span>,</span>
@@ -366,7 +374,7 @@ along with <code>time_var</code> and <code>event_var</code>:</p>
 <span><span class="co">#&gt; Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/custom-1.png" class="r-plt" alt="" width="672"></p>
 <p>For linear models the x-axis is on the original scale (not log):</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
 <span>  data       <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>  outcome    <span class="op">=</span> <span class="st">"mpg"</span>,</span>
@@ -382,7 +390,7 @@ along with <code>time_var</code> and <code>event_var</code>:</p>
 <h2 id="extracting-the-table-only">Extracting the table only<a class="anchor" aria-label="anchor" href="#extracting-the-table-only"></a>
 </h2>
 <p>Use <code><a href="../reference/forest_table.html">forest_table()</a></code> when you only need the numbers:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/forest_table.html">forest_table</a></span><span class="op">(</span></span>
 <span>  data       <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>  outcome    <span class="op">=</span> <span class="st">"am"</span>,</span>
@@ -428,7 +436,7 @@ specified model, and bundling them into a single function call obscures
 that. Instead, fit each outcome separately and stack the plots with
 <code>patchwork</code>, which is already a dependency of
 <code>ggadjustedforest</code>:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span>
