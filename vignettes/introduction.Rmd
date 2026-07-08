@@ -195,18 +195,17 @@ forest_table(
 `ggadjustedforest` intentionally does not provide a built-in multi-outcome
 wrapper. Each outcome deserves its own carefully specified model, and bundling
 them into a single function call obscures that. Instead, fit each outcome
-separately and panel the plots using
-[`cowplot::plot_grid()`](https://wilkelab.org/cowplot/):
+separately and stack the plots with `patchwork`, which is already a dependency
+of `ggadjustedforest`:
 
-```{r multi-cowplot, warning=FALSE, fig.height=5, fig.width=10}
-# install.packages("cowplot")  # if needed
-library(cowplot)
+```{r multi-patchwork, warning=FALSE, fig.height=5, fig.width=10}
+library(patchwork)
 
 data(mtcars)
 mtcars$am <- as.integer(mtcars$am)
 mtcars$vs <- as.integer(mtcars$vs)
 
-# Extract $plot — cowplot takes ggplot2 objects, not the ggadjustedforest wrapper
+# Extract $plot — patchwork composes ggplot2 objects directly
 p_am <- gg_adjusted_forest(
   data = mtcars, outcome = "am", exposure = "hp",
   covariates = c("wt", "cyl"), model_type = "logistic",
@@ -219,13 +218,13 @@ p_vs <- gg_adjusted_forest(
   title = "Engine Shape", show_table = FALSE
 )$plot
 
-cowplot::plot_grid(p_am, p_vs, ncol = 1, align = "v", axis = "lr")
+p_am / p_vs
 ```
 
 This approach gives full control over each panel — different covariate sets,
-model types, or axis scales per outcome — and composes cleanly with any other
-ggplot2 object via `cowplot`. Use `align = "v"` with `axis = "lr"` to keep
-the y-axis labels aligned across panels.
+model types, or axis scales per outcome. The `/` operator stacks plots
+vertically; use `|` for side-by-side. Pass `plot_layout(guides = "collect")`
+to share a legend if needed.
 
 ---
 
