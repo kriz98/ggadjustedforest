@@ -11,22 +11,25 @@ remotes::install_github("kriz98/gg_adjusted_forest")
 
 ## Motivation
 
-When a study asks about the causal effect of a single **exposure** on an
-outcome, the coefficients for adjustment covariates (confounders) are
-almost never the quantities of interest. Reporting them can even mislead
-readers, because confounder coefficients are not identified under the
-causal model — they absorb collider bias, mediation pathways, and other
-artefacts depending on the causal structure (Hernán & Robins, *Causal
-Inference: What If*, 2020; Westreich & Greenland, *Am J Epidemiol*,
-2013).
+When building multivariable models for causal inference, there is an
+**exposure** of interest for which a causal estimand applies to. The
+coefficients for adjusted covariates (confounders) can however be
+misinterpreted when presented together with the estimand of interest.
+Reporting them can even mislead readers, because confounder coefficients
+are not identified under the causal model, and are susceptible to
+absorbing collider bias, mediation pathways, and other artefacts
+depending on causal structures (Hernán & Robins, *Causal Inference: What
+If*, 2020; Westreich & Greenland, *Am J Epidemiol*, 2013).
 
 STROBE guidelines (Vandenbroucke et al., 2007) and recent work on the
 **estimand framework** (ICH E9(R1), 2019) both emphasise that reporting
 should clearly distinguish the target quantity from nuisance parameters.
 
-`ggadjustedforest` operationalises this principle: it fits the models
-you specify but **only exposes the exposure coefficient** in both the
-plot and the table, hiding confounder estimates by design.
+`ggadjustedforest` operationalises this principle and fits the models
+you specify but **only exposes the coefficient of interest** in both the
+plot and the table, hiding confounder estimates by design. We also
+provide a cumulative adjustment option, to show the effect of adjustment
+and model building during exploratory phases of studies.
 
 ------------------------------------------------------------------------
 
