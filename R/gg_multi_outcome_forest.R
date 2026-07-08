@@ -117,6 +117,7 @@ gg_multi_outcome_forest <- function(
     point_shape       = 15,
     line_size         = 0.7,
     color             = "black",
+    colour            = NULL,
     vline_color       = "grey50",
     vline_linetype    = "dashed",
     x_limits          = NULL,
@@ -127,6 +128,8 @@ gg_multi_outcome_forest <- function(
     show_table        = TRUE,
     table_digits      = 2
 ) {
+  # Accept British spelling (ggplot2 convention)
+  if (!is.null(colour)) color <- colour
 
   # ---------------------------------------------------------------------------
   # Determine mode and collect per-outcome ggadjustedforest objects
@@ -341,7 +344,7 @@ gg_multi_outcome_forest <- function(
   fmt_num <- function(x) formatC(x, digits = table_digits, format = "f")
   sep_char <- "\u2013"
 
-  combined_table <- data.frame(
+  combined_table <- tibble::tibble(
     outcome   = combined_df$outcome,
     model     = as.character(combined_df$row_label),
     estimate  = fmt_num(combined_df$estimate),
@@ -352,13 +355,12 @@ gg_multi_outcome_forest <- function(
       " (", fmt_num(combined_df$conf.low), sep_char,
       fmt_num(combined_df$conf.high), ")"
     ),
-    p.value   = ifelse(
+    p.value   = dplyr::if_else(
       combined_df$p.value < 0.001,
       "<0.001",
       formatC(combined_df$p.value, digits = 3, format = "f")
     ),
-    n         = combined_df$n,
-    stringsAsFactors = FALSE
+    n         = combined_df$n
   )
 
   tables <- lapply(results, function(r) r$formatted_table)
@@ -400,8 +402,12 @@ gg_multi_outcome_forest <- function(
 build_multi_table_plot <- function(combined_table, outcome_names, table_digits) {
 
   n_rows  <- nrow(combined_table)
-  # Assign y positions top-to-bottom per outcome group, preserving order
   combined_table$y_pos <- seq(n_rows, 1)
+
+  # Use the same expansion constants as the forest plot (defined in gg_adjusted_forest.R)
+  y_min    <- 1 - .EXPAND_BOTTOM
+  y_max    <- n_rows + .EXPAND_TOP
+  header_y <- n_rows + .EXPAND_TOP * 0.65
 
   tbl_df <- data.frame(
     x     = c(rep(0.02, n_rows), rep(0.72, n_rows)),
@@ -422,24 +428,9 @@ build_multi_table_plot <- function(combined_table, outcome_names, table_digits) 
     prev <- curr
   }
 
-  # Outcome group labels on the left
-  group_label_df <- do.call(rbind, lapply(outcome_names, function(nm) {
-    rows <- combined_table[as.character(combined_table$outcome) == nm, ]
-    if (nrow(rows) == 0) return(NULL)
-    data.frame(
-      x     = 0.5,
-      y     = mean(rows$y_pos),
-      label = nm,
-      stringsAsFactors = FALSE
-    )
-  }))
-
-  y_max <- n_rows + 1.5
-  y_min <- 0.5
-
   hdr <- data.frame(
     x        = c(0.02, 0.72),
-    y        = n_rows + 1,
+    y        = header_y,
     label    = c("Estimate (95% CI)", "p-value"),
     hjust    = c(0, 0),
     stringsAsFactors = FALSE
@@ -460,7 +451,7 @@ build_multi_table_plot <- function(combined_table, outcome_names, table_digits) 
       fontface = "bold"
     ) +
     ggplot2::scale_x_continuous(limits = c(0, 1)) +
-    ggplot2::scale_y_continuous(limits = c(y_min - 0.5, y_max)) +
+    ggplot2::scale_y_continuous(limits = c(y_min, y_max)) +
     ggplot2::theme_void() +
     ggplot2::theme(plot.margin = ggplot2::margin(5, 5, 5, 0))
 

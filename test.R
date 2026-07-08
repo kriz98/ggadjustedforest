@@ -1,112 +1,127 @@
-# Demo script for ggadjustedforest
+# ggadjustedforest — demonstration using colon_s (finalfit package)
 # ─────────────────────────────────────────────────────────────────────────────
-# Uses synthetic data designed to illustrate the key motivating idea:
-#   confounders can make the unadjusted effect look very different from the
-#   true causal effect — and the package shows only THOSE two estimates,
-#   not the confounder coefficients.
+# Dataset: colon_s — 929 patients with colon cancer from the North Central
+#   Cancer Treatment Group (Moertel et al., NEJM 1990)
 #
-# Scenario: does being in the 'exposed' group (binary) increase the risk of
-# the outcome, after accounting for age, comorbidity score, and hospital?
+# Research question: Does having >4 positive lymph nodes (node4) increase the
+#   risk of 5-year mortality, before and after adjusting for patient and tumour
+#   characteristics?
+#
+# This mirrors the motivating use case: showing only the exposure of interest
+# (node4) rather than reporting every confounder coefficient — in line with
+# causal inference principles (Westreich & Greenland, AJE 2013).
+#
+# Tidy tools manifesto compliance (Wickham 2023):
+#   1. Reuse existing data structures — tables returned as tibbles; plots as
+#      ggplot2 objects composable with any ggplot2 extension.
+#   2. Compose simple functions with the pipe — data is always the first
+#      argument, enabling colon_s |> gg_adjusted_forest(...).
+#   3. Embrace functional programming — pure functions, no global state,
+#      results fully contained in the returned list object.
+#   4. Design for humans — gg_ prefix for discoverability; colour/color both
+#      accepted; informative error messages via rlang.
 # ─────────────────────────────────────────────────────────────────────────────
 
 library(ggadjustedforest)
+library(finalfit)  # for colon_s dataset
 
-# ── Synthetic dataset ─────────────────────────────────────────────────────────
-set.seed(42)
-n <- 500
+# ── Data preparation ──────────────────────────────────────────────────────────
+data(colon_s)
 
-age          <- round(rnorm(n, mean = 62, sd = 12))
-comorbidity  <- rpois(n, lambda = 2)
-hospital     <- sample(c("A", "B", "C"), n, replace = TRUE)
+# Create binary outcome: 5-year mortality (0 = alive, 1 = died)
+colon_s$died_5yr   <- as.integer(colon_s$mort_5yr == "Died")
 
-# Exposure is confounded by age and comorbidity (sicker/older more likely exposed)
-log_odds_exp <- -1 + 0.03 * age + 0.2 * comorbidity
-exposed      <- rbinom(n, 1, plogis(log_odds_exp))
+# Second outcome: overall death status for multi-outcome demo
+colon_s$died_all   <- colon_s$status   # already 0/1
 
-# Outcome: true OR for exposure ≈ 1.8 after adjusting for confounders
-log_odds_out <- -3 + 0.6 * exposed + 0.04 * age + 0.3 * comorbidity +
-                ifelse(hospital == "B", 0.4, ifelse(hospital == "C", -0.3, 0))
-outcome      <- rbinom(n, 1, plogis(log_odds_out))
+cat("Outcome prevalence (5yr mortality):", round(mean(colon_s$died_5yr, na.rm = TRUE) * 100, 1), "%\n")
+cat("Exposure prevalence (>4 nodes)    :", round(mean(colon_s$node4) * 100, 1), "%\n\n")
 
-dat <- data.frame(outcome, exposed, age, comorbidity, hospital)
+# Confounders to adjust for
+confounders <- c("age", "sex.factor", "extent.factor", "differ.factor", "surg.factor")
 
-cat("Outcome prevalence:", round(mean(outcome) * 100, 1), "%\n")
-cat("Exposure prevalence:", round(mean(exposed) * 100, 1), "%\n\n")
+# ── 1. Unadjusted vs fully adjusted (pipe-friendly API) ───────────────────────
+# Manifesto principle 2: data is first argument — pipe works naturally
+result <- colon_s |>
+  gg_adjusted_forest(
+    outcome    = "died_5yr",
+    exposure   = "node4",
+    covariates = confounders,
+    model_type = "logistic",
+    title      = "Effect of Lymph Node Involvement (>4 nodes) on 5-Year Mortality"
+  )
 
-# ── 1. Unadjusted vs fully adjusted ──────────────────────────────────────────
-result <- gg_adjusted_forest(
-  data       = dat,
-  outcome    = "outcome",
-  exposure   = "exposed",
-  covariates = c("age", "comorbidity", "hospital"),
-  model_type = "logistic",
-  title      = "Effect of Exposure on Outcome"
-)
+result$plot            # ggplot2 object — composable with any ggplot2 extension
+result$table           # tibble of numeric estimates
+result$formatted_table # tibble with "OR (lower–upper)" strings
 
-result$plot
-result$formatted_table
-
-# ── 2. Cumulative adjustment (each confounder added one at a time) ────────────
+# ── 2. Cumulative adjustment ──────────────────────────────────────────────────
 cumulative_result <- gg_adjusted_forest(
-  data       = dat,
-  outcome    = "outcome",
-  exposure   = "exposed",
-  covariates = c("age", "comorbidity", "hospital"),
+  data       = colon_s,
+  outcome    = "died_5yr",
+  exposure   = "node4",
+  covariates = confounders,
   model_type = "logistic",
   cumulative = TRUE,
   cumulative_labels = c(
-    "Unadjusted"                        = "Unadjusted",
-    "+ age"                             = "+ Age",
-    "+ age + comorbidity"               = "+ Comorbidity",
-    "+ age + comorbidity + hospital"    = "+ Hospital"
+    "Unadjusted"                                                    = "Unadjusted",
+    "+ age"                                                         = "+ Age",
+    "+ age + sex.factor"                                            = "+ Sex",
+    "+ age + sex.factor + extent.factor"                            = "+ Extent of spread",
+    "+ age + sex.factor + extent.factor + differ.factor"            = "+ Tumour differentiation",
+    "+ age + sex.factor + extent.factor + differ.factor + surg.factor" = "+ Time from surgery"
   ),
-  title = "How Does the Estimate Change as We Add Confounders?"
+  title = "Cumulative Adjustment: Effect of Lymph Node Involvement on 5-Year Mortality"
 )
 
 cumulative_result$plot
-# Note: the unadjusted OR is inflated because age/comorbidity are shared
-# causes of both exposure and outcome (confounding). Adjustment reveals
-# the estimate closest to the true causal effect.
+# The estimate barely moves across adjustment steps, suggesting node4 is not
+# heavily confounded by these patient/tumour characteristics.
 
 # ── 3. Multiple outcomes side-by-side ─────────────────────────────────────────
-# Simulate a second outcome (e.g. a different complication)
-log_odds_out2 <- -2.5 + 0.4 * exposed + 0.02 * age + 0.1 * comorbidity
-dat$outcome2  <- rbinom(n, 1, plogis(log_odds_out2))
-
 multi_result <- gg_multi_outcome_forest(
-  data       = dat,
+  data       = colon_s,
   outcomes   = c(
-    "Primary Outcome"   = "outcome",
-    "Secondary Outcome" = "outcome2"
+    "5-Year Mortality" = "died_5yr",
+    "Death (all)"      = "died_all"
   ),
-  exposure   = "exposed",
-  covariates = c("age", "comorbidity", "hospital"),
+  exposure   = "node4",
+  covariates = confounders,
   model_type = "logistic",
-  title      = "Effect of Exposure on Multiple Outcomes"
+  title      = "Effect of Lymph Node Involvement (>4 nodes) Across Outcomes",
+  colour     = "black"   # British spelling accepted (manifesto principle 4)
 )
 
 multi_result$plot
-multi_result$combined_table
+multi_result$combined_table  # tibble, ready for export or further dplyr manipulation
 
-# ── 4. Linear regression (continuous outcome) ─────────────────────────────────
-dat$continuous_outcome <- 5 + 1.5 * exposed - 0.05 * age +
-                          0.2 * comorbidity + rnorm(n, sd = 2)
-
-linear_result <- gg_adjusted_forest(
-  data       = dat,
-  outcome    = "continuous_outcome",
-  exposure   = "exposed",
-  covariates = c("age", "comorbidity"),
-  model_type = "linear",
-  title      = "Effect of Exposure on Continuous Outcome"
+# ── 4. Cox proportional hazards (survival outcome) ────────────────────────────
+# colon_s$time.years = time to death/censoring; status = died (0/1)
+cox_result <- gg_adjusted_forest(
+  data       = colon_s,
+  outcome    = "status",     # ignored for coxph
+  exposure   = "node4",
+  covariates = confounders,
+  model_type = "coxph",
+  time_var   = "time.years",
+  event_var  = "status",
+  title      = "Hazard of Death by Lymph Node Involvement (Cox model)"
 )
 
-linear_result$plot
+cox_result$plot
 
-# ── 5. Save plots ──────────────────────────────────────────────────────────────
-ggplot2::ggsave("plot_adjusted.png",    result$plot,            width = 8, height = 3.5, dpi = 300)
-ggplot2::ggsave("plot_cumulative.png",  cumulative_result$plot, width = 8, height = 5,   dpi = 300)
-ggplot2::ggsave("plot_multi.png",       multi_result$plot,      width = 8, height = 5,   dpi = 300)
-ggplot2::ggsave("plot_linear.png",      linear_result$plot,     width = 8, height = 3.5, dpi = 300)
+# ── 5. Downstream pipe use of tibble output ───────────────────────────────────
+# Manifesto principle 1: tibble output integrates directly with dplyr
+library(dplyr)
+
+result$formatted_table |>
+  filter(p.value == "<0.001" | as.numeric(p.value) < 0.05) |>
+  select(model, formatted, p.value)
+
+# ── 6. Save plots ─────────────────────────────────────────────────────────────
+ggplot2::ggsave("plot_adjusted.png",   result$plot,           width = 9, height = 3.5, dpi = 300)
+ggplot2::ggsave("plot_cumulative.png", cumulative_result$plot, width = 9, height = 6,   dpi = 300)
+ggplot2::ggsave("plot_multi.png",      multi_result$plot,     width = 9, height = 5,   dpi = 300)
+ggplot2::ggsave("plot_cox.png",        cox_result$plot,       width = 9, height = 3.5, dpi = 300)
 
 cat("\nAll plots saved.\n")

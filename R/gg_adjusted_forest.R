@@ -107,6 +107,7 @@ gg_adjusted_forest <- function(
     point_shape         = 15,
     line_size           = 0.7,
     color               = "black",
+    colour              = NULL,
     vline_color         = "grey50",
     vline_linetype      = "dashed",
     x_limits            = NULL,
@@ -121,6 +122,8 @@ gg_adjusted_forest <- function(
     show_table          = TRUE,
     table_digits        = 2
 ) {
+  # Accept British spelling (ggplot2 convention)
+  if (!is.null(colour)) color <- colour
 
   # --------------------------------------------------------------------------
   # Input validation
@@ -239,19 +242,18 @@ gg_adjusted_forest <- function(
   # --------------------------------------------------------------------------
   # Table output
   # --------------------------------------------------------------------------
-  tbl <- data.frame(
-    model      = results_df$row_label,
-    estimate   = results_df$estimate,
-    conf.low   = results_df$conf.low,
-    conf.high  = results_df$conf.high,
-    p.value    = results_df$p.value,
-    n          = results_df$n,
-    stringsAsFactors = FALSE
+  tbl <- tibble::tibble(
+    model     = results_df$row_label,
+    estimate  = results_df$estimate,
+    conf.low  = results_df$conf.low,
+    conf.high = results_df$conf.high,
+    p.value   = results_df$p.value,
+    n         = results_df$n
   )
 
   fmt_num <- function(x) formatC(x, digits = table_digits, format = "f")
   sep_char <- "\u2013"  # en-dash
-  formatted_tbl <- data.frame(
+  formatted_tbl <- tibble::tibble(
     model     = as.character(tbl$model),
     estimate  = fmt_num(tbl$estimate),
     ci        = paste0(fmt_num(tbl$conf.low), sep_char, fmt_num(tbl$conf.high)),
@@ -259,13 +261,12 @@ gg_adjusted_forest <- function(
       fmt_num(tbl$estimate),
       " (", fmt_num(tbl$conf.low), sep_char, fmt_num(tbl$conf.high), ")"
     ),
-    p.value   = ifelse(
+    p.value   = dplyr::if_else(
       tbl$p.value < 0.001,
       "<0.001",
       formatC(tbl$p.value, digits = 3, format = "f")
     ),
-    n         = tbl$n,
-    stringsAsFactors = FALSE
+    n         = tbl$n
   )
 
   # --------------------------------------------------------------------------
@@ -321,6 +322,10 @@ gg_adjusted_forest <- function(
 # ------------------------------------------------------------------------------
 # Internal: build forest ggplot
 # ------------------------------------------------------------------------------
+# Expansion constants shared by forest plot and table panel to keep y-alignment
+.EXPAND_BOTTOM <- 0.6
+.EXPAND_TOP    <- 1.4   # extra space used by the table header row
+
 #' @noRd
 build_forest_plot <- function(results_df, ref_line, effect_label, title,
                                point_size, point_shape, line_size, color,
@@ -374,6 +379,11 @@ build_forest_plot <- function(results_df, ref_line, effect_label, title,
       plot.margin       = ggplot2::margin(5, 10, 5, 5)
     )
 
+  # Pin y expansion to known values so the table panel can match exactly
+  p <- p + ggplot2::scale_y_discrete(
+    expand = ggplot2::expansion(add = c(.EXPAND_BOTTOM, .EXPAND_TOP))
+  )
+
   if (log_scale) {
     if (!is.null(x_breaks)) {
       p <- p + ggplot2::scale_x_log10(
@@ -410,37 +420,16 @@ build_table_plot <- function(formatted_tbl, table_digits) {
 
   n_rows <- nrow(formatted_tbl)
 
-  # y positions: match factor levels (rows printed top-to-bottom = n_rows:1)
+  # y positions must mirror the forest plot's factor-level integers exactly:
+  # factor level 1 = bottom row, level n_rows = top row (Unadjusted)
   formatted_tbl$y_pos <- seq(n_rows, 1)
 
-  y_max <- n_rows + 0.5
-  y_min <- 0.5
-
-  # Column x positions
-  x_model   <- 0.05
-  x_est     <- 0.50
-  x_p       <- 0.80
+  # Match the forest plot's pinned expansion so patchwork aligns rows exactly
+  y_min    <- 1 - .EXPAND_BOTTOM                  # same as forest plot lower bound
+  y_max    <- n_rows + .EXPAND_TOP                 # same as forest plot upper bound
+  header_y <- n_rows + .EXPAND_TOP * 0.65          # header sits in the extra top space
 
   tbl_df <- data.frame(
-    x     = c(
-      rep(x_model, n_rows),
-      rep(x_est,   n_rows),
-      rep(x_p,     n_rows)
-    ),
-    y     = rep(formatted_tbl$y_pos, 3),
-    label = c(
-      formatted_tbl$formatted,
-      formatted_tbl$formatted,  # placeholder replaced below
-      formatted_tbl$p.value
-    ),
-    stringsAsFactors = FALSE
-  )
-  # Replace middle block with formatted CI
-  tbl_df$label[seq(n_rows + 1, 2 * n_rows)] <- formatted_tbl$formatted
-
-  # Two columns: estimate (CI) left-aligned, p-value right-aligned
-  # x in [0, 1]; left-align both to avoid clipping at panel edge
-  tbl_df2 <- data.frame(
     x     = c(rep(0.02, n_rows), rep(0.72, n_rows)),
     y     = rep(formatted_tbl$y_pos, 2),
     label = c(formatted_tbl$formatted, formatted_tbl$p.value),
@@ -448,19 +437,17 @@ build_table_plot <- function(formatted_tbl, table_digits) {
     stringsAsFactors = FALSE
   )
 
-  # Header
   hdr <- data.frame(
     x        = c(0.02, 0.72),
-    y        = n_rows + 1,
+    y        = header_y,
     label    = c("Estimate (95% CI)", "p-value"),
     hjust    = c(0, 0),
-    fontface = "bold",
     stringsAsFactors = FALSE
   )
 
   ggplot2::ggplot() +
     ggplot2::geom_text(
-      data = tbl_df2,
+      data = tbl_df,
       ggplot2::aes(x = .data[["x"]], y = .data[["y"]],
                    label = .data[["label"]], hjust = .data[["hjust"]]),
       size = 3.5
@@ -473,7 +460,7 @@ build_table_plot <- function(formatted_tbl, table_digits) {
       fontface = "bold"
     ) +
     ggplot2::scale_x_continuous(limits = c(0, 1)) +
-    ggplot2::scale_y_continuous(limits = c(y_min - 0.5, y_max + 0.8)) +
+    ggplot2::scale_y_continuous(limits = c(y_min, y_max)) +
     ggplot2::theme_void() +
     ggplot2::theme(
       plot.margin = ggplot2::margin(5, 5, 5, 0)
