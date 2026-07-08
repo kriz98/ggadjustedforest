@@ -2,7 +2,7 @@ Package: ggadjustedforest
 Title: Publication Ready Forest Plots for Estimand of Interest
 Version: 0.1.0
 Authors@R: person("Chris", "Varghese", email = "chris.varghese@auckland.ac.nz",
-    role = c("aut", "cre"), comment = c(ORCID = ""))
+    role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7369-8639"))
 Description: Creates publication-quality forest plots and effect-size tables that
     display only the unadjusted and adjusted estimates for a user-specified exposure
     variable of interest, hiding confounder coefficients in accordance with causal
