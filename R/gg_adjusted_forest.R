@@ -363,7 +363,7 @@ build_forest_plot <- function(results_df, ref_line, effect_label, title,
     ggplot2::labs(
       x     = effect_label,
       y     = NULL,
-      title = title
+      title = if (!is.null(title)) paste(strwrap(title, width = 60), collapse = "\n") else NULL
     ) +
     ggplot2::theme_classic(base_size = 12) +
     ggplot2::theme(
