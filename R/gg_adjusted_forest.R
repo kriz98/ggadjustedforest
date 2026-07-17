@@ -81,28 +81,25 @@
 #' @export
 #'
 #' @examples
-#' # Logistic regression example
-#' data(mtcars)
-#' mtcars$am <- as.integer(mtcars$am)   # binary outcome
+#' # Cox proportional hazards — rotterdam breast cancer data
+#' \donttest{
+#' data(cancer, package = "survival")
+#' df <- rotterdam[, c("hormon", "age", "size", "grade", "nodes", "death", "dtime")]
+#' df <- df[complete.cases(df), ]
+#' df$er10 <- rotterdam$er[complete.cases(rotterdam[,
+#'   c("hormon", "age", "size", "grade", "nodes", "death", "dtime")])] / 10
 #' result <- gg_adjusted_forest(
-#'   data        = mtcars,
-#'   outcome     = "am",
-#'   exposure    = "hp",
-#'   covariates  = c("wt", "cyl"),
-#'   model_type  = "logistic",
-#'   title       = "Effect of Horsepower on Transmission Type"
+#'   data       = df,
+#'   outcome    = "death",
+#'   exposure   = "hormon",
+#'   covariates = c("age", "size", "grade", "nodes", "er10"),
+#'   model_type = "coxph",
+#'   time_var   = "dtime",
+#'   event_var  = "death",
+#'   title      = "Effect of Hormonal Therapy on Survival (Rotterdam)"
 #' )
 #' result$table
-#'
-#' # Cumulative adjustment
-#' result2 <- gg_adjusted_forest(
-#'   data       = mtcars,
-#'   outcome    = "am",
-#'   exposure   = "hp",
-#'   covariates = c("wt", "cyl"),
-#'   cumulative = TRUE
-#' )
-#' result2$table
+#' }
 gg_adjusted_forest <- function(
     data,
     outcome,
