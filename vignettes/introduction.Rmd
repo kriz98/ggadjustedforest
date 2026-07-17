@@ -44,11 +44,7 @@ An additional feature for exploratory data analysis is also provided whereby the
 
 ## Data
 
-All examples use the `rotterdam` breast cancer dataset from the **survival**
-package — 2,982 primary breast cancer patients from the Rotterdam tumour bank.
-The research question throughout is whether hormonal therapy (`hormon`) affects
-survival and recurrence, before and after adjusting for patient and tumour
-characteristics.
+All examples use the `rotterdam` breast cancer dataset from the **survival** package — 2,982 primary breast cancer patients from the Rotterdam tumour bank. The research question throughout is whether hormonal therapy (`hormon`) affects survival and recurrence, before and after adjusting for patient and tumour characteristics.
 
 ```{r setup}
 library(ggadjustedforest)
@@ -110,9 +106,7 @@ result$plot
 
 ## Cumulative adjustment
 
-When you want to visualise how the effect estimate changes as confounders are
-added sequentially — a common presentation in epidemiological reporting — use
-`cumulative = TRUE`. Use `cumulative_labels` to provide human-readable row names:
+Although generally recommended against when performing causal inference, sequential addition of covariates may be helpful when building regression models for predictive and descriptive aims. As such, this feature is provided to visualise how the effect estimate changes as covariates are  added sequentially. This may aid in the selection of a parsimonious model with the best fit as recommended by the principles laid out in 'R for Health Data Science' by Ewen Harrison and Riinu Pius. To use this feature, set `cumulative = TRUE` and use `cumulative_labels` to provide human-readable row names:
 
 ```{r cumulative, fig.height=5}
 result_cum <- gg_adjusted_forest(

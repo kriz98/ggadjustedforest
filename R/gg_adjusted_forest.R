@@ -17,6 +17,16 @@
 #'   `"poisson"`, or `"coxph"`.
 #' @param cumulative Logical. If `TRUE`, fit models that progressively add one
 #'   covariate at a time and show each step as a separate row. Default `FALSE`.
+#'
+#'   **Important:** Odds ratios (`"logistic"`) and hazard ratios (`"coxph"`) are
+#'   **non-collapsible** effect measures. This means the exposure coefficient
+#'   will change as covariates are added even in the complete absence of
+#'   confounding, because adding covariates reduces residual variance on the
+#'   latent scale. Consequently, a shifting OR or HR across sequential models
+#'   cannot be cleanly attributed to confounding. For causal inference, the
+#'   unadjusted vs. fully-adjusted comparison (the default) is preferred.
+#'   Cumulative display is most interpretable for collapsible measures:
+#'   risk differences (`"linear"`) and risk ratios (`"poisson"`).
 #' @param cumulative_labels Optional named character vector to rename the
 #'   cumulative model labels. Names should match the auto-generated labels
 #'   (e.g., `"+ age"`, `"+ age + sex"`); values are the replacement labels.
@@ -134,6 +144,24 @@ gg_adjusted_forest <- function(
 
   if (!is.logical(cumulative) || length(cumulative) != 1L) {
     rlang::abort("`cumulative` must be a single logical value.", call = NULL)
+  }
+
+  if (isTRUE(cumulative) && model_type %in% c("logistic", "coxph")) {
+    rlang::warn(
+      paste0(
+        "Cumulative adjustment with `model_type = \"", model_type, "\"` uses a ",
+        if (model_type == "logistic") "non-collapsible effect measure (odds ratio)."
+        else "non-collapsible effect measure (hazard ratio).",
+        "\n",
+        "The exposure coefficient will change across sequential models even without confounding, ",
+        "because adding covariates reduces residual variance on the latent scale. ",
+        "Changes in the OR/HR cannot be cleanly attributed to confounding. ",
+        "For causal inference, prefer the default unadjusted vs. fully-adjusted display. ",
+        "Cumulative mode is most interpretable for collapsible measures: ",
+        "risk differences (model_type = \"linear\") or risk ratios (model_type = \"poisson\")."
+      ),
+      call = NULL
+    )
   }
   if (!is.numeric(conf_level) || conf_level <= 0 || conf_level >= 1) {
     rlang::abort("`conf_level` must be a number strictly between 0 and 1.",
