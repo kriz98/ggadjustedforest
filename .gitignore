@@ -9,6 +9,8 @@ inst/doc
 tests/testthat/Rplots.pdf
 CRAN-SUBMISSION
 vignettes/.Rhistory
+vignettes/*.html
+vignettes/*_files/
 *.png
 !docs/**/*.png
 Rplots.pdf
