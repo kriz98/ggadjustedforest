@@ -203,8 +203,71 @@ building regression models for predictive and descriptive aims. As such,
 this feature is provided to visualise how the effect estimate changes as
 covariates are added sequentially. This may aid in the selection of a
 parsimonious model with the best fit as recommended by the principles
-laid out in ‘R for Health Data Science’ by Ewen Harrison and Riinu Pius.
-To use this feature, set <code>cumulative = TRUE</code> and use
+laid out in <em>R for Health Data Science</em> by Ewen Harrison and
+Riinu Pius.</p>
+<div class="section level3">
+<h3 id="collapsibility-and-interpreting-sequential-estimates">Collapsibility and interpreting sequential estimates<a class="anchor" aria-label="anchor" href="#collapsibility-and-interpreting-sequential-estimates"></a>
+</h3>
+<p>A key consideration when using cumulative adjustment is whether the
+effect measure being modelled is <strong>collapsible</strong>. A
+collapsible effect measure is one where the marginal (unadjusted)
+estimate equals a weighted average of the stratum-specific (adjusted)
+estimates. For collapsible measures, a change in the exposure
+coefficient as covariates are added can be interpreted as evidence of
+confounding. For non-collapsible measures, the coefficient changes
+simply because adding covariates alters the residual variance on the
+underlying latent scale — even when there is no confounding at all.</p>
+<table class="table">
+<colgroup>
+<col width="18%">
+<col width="18%">
+<col width="31%">
+<col width="31%">
+</colgroup>
+<thead><tr class="header">
+<th>Model type</th>
+<th>Effect measure</th>
+<th align="center">Collapsible</th>
+<th align="center">Cumulative display interpretable?</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>"linear"</code></td>
+<td>Risk difference</td>
+<td align="center">✅ Yes</td>
+<td align="center">✅ Yes</td>
+</tr>
+<tr class="even">
+<td><code>"poisson"</code></td>
+<td>Risk ratio</td>
+<td align="center">✅ Yes</td>
+<td align="center">✅ Yes</td>
+</tr>
+<tr class="odd">
+<td><code>"logistic"</code></td>
+<td>Odds ratio</td>
+<td align="center">❌ No</td>
+<td align="center">⚠️ Use with caution</td>
+</tr>
+<tr class="even">
+<td><code>"coxph"</code></td>
+<td>Hazard ratio</td>
+<td align="center">❌ No</td>
+<td align="center">⚠️ Use with caution</td>
+</tr>
+</tbody>
+</table>
+<p>When <code>cumulative = TRUE</code> is used with
+<code>"logistic"</code> or <code>"coxph"</code>,
+<code>ggadjustedforest</code> will emit a warning to this effect. The
+feature is retained because it remains useful in descriptive and
+predictive modelling contexts — for example, when assessing whether
+model fit improves with each additional covariate — but the sequential
+change in OR or HR should not be interpreted as a direct measure of
+confounding.</p>
+<p>For a full treatment of non-collapsibility see Greenland (1987) and
+Hernán (2010).</p>
+<p>To use this feature, set <code>cumulative = TRUE</code> and use
 <code>cumulative_labels</code> to provide human-readable row names:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_cum</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
@@ -239,6 +302,7 @@ To use this feature, set <code>cumulative = TRUE</code> and use
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> + Lymph nodes        0.50 (0.38–0.65) &lt;0.001 </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> + Oestrogen receptor 0.50 (0.38–0.65) &lt;0.001</span></span></code></pre></div>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="cox-proportional-hazards-regression">Cox proportional hazards regression<a class="anchor" aria-label="anchor" href="#cox-proportional-hazards-regression"></a>
@@ -340,6 +404,12 @@ side-by-side.</p>
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
+<li>Greenland S (1987). Interpretation and choice of effect measures in
+epidemiologic analyses. <em>Am J Epidemiol</em> 125(5): 761–768.</li>
+<li>Harrison E, Pius R (2021). <em>R for Health Data Science</em>. CRC
+Press.</li>
+<li>Hernán MA (2010). The hazards of hazard ratios.
+<em>Epidemiology</em> 21(1): 13–15.</li>
 <li>Hernán MA, Robins JM (2020). <em>Causal Inference: What If</em>.
 Chapman &amp; Hall/CRC.</li>
 <li>Royston P, Altman DG (2013). External validation of a Cox prognostic

@@ -133,7 +133,37 @@ regression models for predictive and descriptive aims. As such, this
 feature is provided to visualise how the effect estimate changes as
 covariates are added sequentially. This may aid in the selection of a
 parsimonious model with the best fit as recommended by the principles
-laid out in ‘R for Health Data Science’ by Ewen Harrison and Riinu Pius.
+laid out in *R for Health Data Science* by Ewen Harrison and Riinu Pius.
+
+### Collapsibility and interpreting sequential estimates
+
+A key consideration when using cumulative adjustment is whether the
+effect measure being modelled is **collapsible**. A collapsible effect
+measure is one where the marginal (unadjusted) estimate equals a
+weighted average of the stratum-specific (adjusted) estimates. For
+collapsible measures, a change in the exposure coefficient as covariates
+are added can be interpreted as evidence of confounding. For
+non-collapsible measures, the coefficient changes simply because adding
+covariates alters the residual variance on the underlying latent scale —
+even when there is no confounding at all.
+
+| Model type   | Effect measure  | Collapsible | Cumulative display interpretable? |
+|--------------|-----------------|:-----------:|:---------------------------------:|
+| `"linear"`   | Risk difference |   ✅ Yes    |              ✅ Yes               |
+| `"poisson"`  | Risk ratio      |   ✅ Yes    |              ✅ Yes               |
+| `"logistic"` | Odds ratio      |    ❌ No    |        ⚠️ Use with caution        |
+| `"coxph"`    | Hazard ratio    |    ❌ No    |        ⚠️ Use with caution        |
+
+When `cumulative = TRUE` is used with `"logistic"` or `"coxph"`,
+`ggadjustedforest` will emit a warning to this effect. The feature is
+retained because it remains useful in descriptive and predictive
+modelling contexts — for example, when assessing whether model fit
+improves with each additional covariate — but the sequential change in
+OR or HR should not be interpreted as a direct measure of confounding.
+
+For a full treatment of non-collapsibility see Greenland (1987) and
+Hernán (2010).
+
 To use this feature, set `cumulative = TRUE` and use `cumulative_labels`
 to provide human-readable row names:
 
@@ -293,6 +323,11 @@ forest_table(
 
 ## References
 
+- Greenland S (1987). Interpretation and choice of effect measures in
+  epidemiologic analyses. *Am J Epidemiol* 125(5): 761–768.
+- Harrison E, Pius R (2021). *R for Health Data Science*. CRC Press.
+- Hernán MA (2010). The hazards of hazard ratios. *Epidemiology* 21(1):
+  13–15.
 - Hernán MA, Robins JM (2020). *Causal Inference: What If*. Chapman &
   Hall/CRC.
 - Royston P, Altman DG (2013). External validation of a Cox prognostic
