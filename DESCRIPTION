@@ -33,5 +33,5 @@ Suggests:
     finalfit
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://github.com/kriz98/gg_adjusted_forest, https://kriz98.github.io/gg_adjusted_forest/
-BugReports: https://github.com/kriz98/gg_adjusted_forest/issues
+URL: https://github.com/kriz98/ggadjustedforest, https://kriz98.github.io/ggadjustedforest/
+BugReports: https://github.com/kriz98/ggadjustedforest/issues

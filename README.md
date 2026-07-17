@@ -19,7 +19,7 @@ install.packages("ggadjustedforest")
 
 # Or install the development version from GitHub
 # install.packages("remotes")
-remotes::install_github("kriz98/gg_adjusted_forest")
+remotes::install_github("kriz98/ggadjustedforest")
 ```
 
 ## Quick start
