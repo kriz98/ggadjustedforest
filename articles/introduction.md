@@ -133,7 +133,9 @@ regression models for predictive and descriptive aims. As such, this
 feature is provided to visualise how the effect estimate changes as
 covariates are added sequentially. This may aid in the selection of a
 parsimonious model with the best fit as recommended by the principles
-laid out in *R for Health Data Science* by Ewen Harrison and Riinu Pius.
+laid out in [*R for Health Data
+Science*](https://argoshare.is.ed.ac.uk/healthyr_book/) by Ewen Harrison
+and Riinu Pius.
 
 ### Collapsibility and interpreting sequential estimates
 
@@ -144,7 +146,7 @@ weighted average of the stratum-specific (adjusted) estimates. For
 collapsible measures, a change in the exposure coefficient as covariates
 are added can be interpreted as evidence of confounding. For
 non-collapsible measures, the coefficient changes simply because adding
-covariates alters the residual variance on the underlying latent scale —
+covariates alters the residual variance on the underlying latent scale,
 even when there is no confounding at all.
 
 | Model type   | Effect measure  | Collapsible | Cumulative display interpretable? |
@@ -158,8 +160,8 @@ When `cumulative = TRUE` is used with `"logistic"` or `"coxph"`,
 `ggadjustedforest` will emit a warning to this effect. The feature is
 retained because it remains useful in descriptive and predictive
 modelling contexts — for example, when assessing whether model fit
-improves with each additional covariate — but the sequential change in
-OR or HR should not be interpreted as a direct measure of confounding.
+improves with each additional covariate, but the sequential change in OR
+or HR should not be interpreted as a direct measure of confounding.
 
 For a full treatment of non-collapsibility see Greenland (1987) and
 Hernán (2010).

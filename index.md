@@ -3,7 +3,7 @@
 **ggadjustedforest** creates publication-quality forest plots and
 effect-size tables that display *only* the unadjusted and adjusted
 estimates for a user-specified exposure variable of interest. Confounder
-coefficients are hidden by design, to avoid the “Table 2 fallcy” as
+coefficients are hidden by design, to avoid the “Table 2 fallacy” as
 described by Westreich & Greenland 2013, and in accordance with causal
 inference principles.
 

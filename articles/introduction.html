@@ -203,8 +203,8 @@ building regression models for predictive and descriptive aims. As such,
 this feature is provided to visualise how the effect estimate changes as
 covariates are added sequentially. This may aid in the selection of a
 parsimonious model with the best fit as recommended by the principles
-laid out in <em>R for Health Data Science</em> by Ewen Harrison and
-Riinu Pius.</p>
+laid out in <a href="https://argoshare.is.ed.ac.uk/healthyr_book/" class="external-link"><em>R
+for Health Data Science</em></a> by Ewen Harrison and Riinu Pius.</p>
 <div class="section level3">
 <h3 id="collapsibility-and-interpreting-sequential-estimates">Collapsibility and interpreting sequential estimates<a class="anchor" aria-label="anchor" href="#collapsibility-and-interpreting-sequential-estimates"></a>
 </h3>
@@ -216,7 +216,7 @@ estimates. For collapsible measures, a change in the exposure
 coefficient as covariates are added can be interpreted as evidence of
 confounding. For non-collapsible measures, the coefficient changes
 simply because adding covariates alters the residual variance on the
-underlying latent scale — even when there is no confounding at all.</p>
+underlying latent scale, even when there is no confounding at all.</p>
 <table class="table">
 <colgroup>
 <col width="18%">
@@ -262,7 +262,7 @@ underlying latent scale — even when there is no confounding at all.</p>
 <code>ggadjustedforest</code> will emit a warning to this effect. The
 feature is retained because it remains useful in descriptive and
 predictive modelling contexts — for example, when assessing whether
-model fit improves with each additional covariate — but the sequential
+model fit improves with each additional covariate, but the sequential
 change in OR or HR should not be interpreted as a direct measure of
 confounding.</p>
 <p>For a full treatment of non-collapsibility see Greenland (1987) and
