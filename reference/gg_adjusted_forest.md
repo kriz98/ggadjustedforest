@@ -72,6 +72,17 @@ gg_adjusted_forest(
   Logical. If `TRUE`, fit models that progressively add one covariate at
   a time and show each step as a separate row. Default `FALSE`.
 
+  **Important:** Odds ratios (`"logistic"`) and hazard ratios
+  (`"coxph"`) are **non-collapsible** effect measures. This means the
+  exposure coefficient will change as covariates are added even in the
+  complete absence of confounding, because adding covariates reduces
+  residual variance on the latent scale. Consequently, a shifting OR or
+  HR across sequential models cannot be cleanly attributed to
+  confounding. For causal inference, the unadjusted vs. fully-adjusted
+  comparison (the default) is preferred. Cumulative display is most
+  interpretable for collapsible measures: risk differences (`"linear"`)
+  and risk ratios (`"poisson"`).
+
 - cumulative_labels:
 
   Optional named character vector to rename the cumulative model labels.
@@ -242,6 +253,8 @@ result2 <- gg_adjusted_forest(
   covariates = c("wt", "cyl"),
   cumulative = TRUE
 )
+#> Warning: Cumulative adjustment with `model_type = "logistic"` uses a non-collapsible effect measure (odds ratio).
+#> The exposure coefficient will change across sequential models even without confounding, because adding covariates reduces residual variance on the latent scale. Changes in the OR/HR cannot be cleanly attributed to confounding. For causal inference, prefer the default unadjusted vs. fully-adjusted display. Cumulative mode is most interpretable for collapsible measures: risk differences (model_type = "linear") or risk ratios (model_type = "poisson").
 #> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 #> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 #> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred

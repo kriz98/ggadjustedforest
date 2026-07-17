@@ -127,10 +127,15 @@ result$plot
 
 ## Cumulative adjustment
 
-When you want to visualise how the effect estimate changes as
-confounders are added sequentially — a common presentation in
-epidemiological reporting — use `cumulative = TRUE`. Use
-`cumulative_labels` to provide human-readable row names:
+Although generally recommended against when performing causal inference,
+sequential addition of covariates may be helpful when building
+regression models for predictive and descriptive aims. As such, this
+feature is provided to visualise how the effect estimate changes as
+covariates are added sequentially. This may aid in the selection of a
+parsimonious model with the best fit as recommended by the principles
+laid out in ‘R for Health Data Science’ by Ewen Harrison and Riinu Pius.
+To use this feature, set `cumulative = TRUE` and use `cumulative_labels`
+to provide human-readable row names:
 
 ``` r
 

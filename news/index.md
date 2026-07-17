@@ -2,6 +2,16 @@
 
 ## ggadjustedforest 0.1.1
 
+### Changes
+
+- `cumulative = TRUE` with `model_type = "logistic"` or `"coxph"` now
+  emits a warning explaining that odds ratios and hazard ratios are
+  non-collapsible effect measures. A shifting OR/HR across sequential
+  models cannot be cleanly attributed to confounding; cumulative display
+  is most interpretable for collapsible measures (risk differences, risk
+  ratios). The feature is retained for descriptive and predictive
+  modelling contexts.
+
 ### Documentation
 
 - Updated vignette and README examples to use the `rotterdam` breast

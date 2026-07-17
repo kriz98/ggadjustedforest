@@ -115,7 +115,16 @@ only the unadjusted estimate.</p></dd>
 
 <dt id="arg-cumulative">cumulative<a class="anchor" aria-label="anchor" href="#arg-cumulative"></a></dt>
 <dd><p>Logical. If <code>TRUE</code>, fit models that progressively add one
-covariate at a time and show each step as a separate row. Default <code>FALSE</code>.</p></dd>
+covariate at a time and show each step as a separate row. Default <code>FALSE</code>.</p>
+<p><strong>Important:</strong> Odds ratios (<code>"logistic"</code>) and hazard ratios (<code>"coxph"</code>) are
+<strong>non-collapsible</strong> effect measures. This means the exposure coefficient
+will change as covariates are added even in the complete absence of
+confounding, because adding covariates reduces residual variance on the
+latent scale. Consequently, a shifting OR or HR across sequential models
+cannot be cleanly attributed to confounding. For causal inference, the
+unadjusted vs. fully-adjusted comparison (the default) is preferred.
+Cumulative display is most interpretable for collapsible measures:
+risk differences (<code>"linear"</code>) and risk ratios (<code>"poisson"</code>).</p></dd>
 
 
 <dt id="arg-cumulative-labels">cumulative_labels<a class="anchor" aria-label="anchor" href="#arg-cumulative-labels"></a></dt>
@@ -290,6 +299,8 @@ containing strings like <code>"1.23 (1.01-1.55)"</code>.</p></dd>
 <span class="r-in"><span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wt"</span>, <span class="st">"cyl"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  cumulative <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Cumulative adjustment with `model_type = "logistic"` uses a non-collapsible effect measure (odds ratio).</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> The exposure coefficient will change across sequential models even without confounding, because adding covariates reduces residual variance on the latent scale. Changes in the OR/HR cannot be cleanly attributed to confounding. For causal inference, prefer the default unadjusted vs. fully-adjusted display. Cumulative mode is most interpretable for collapsible measures: risk differences (model_type = "linear") or risk ratios (model_type = "poisson").</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>glm.fit: fitted probabilities numerically 0 or 1 occurred</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>glm.fit: fitted probabilities numerically 0 or 1 occurred</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>glm.fit: fitted probabilities numerically 0 or 1 occurred</span>

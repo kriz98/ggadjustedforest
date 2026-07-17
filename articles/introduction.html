@@ -197,9 +197,14 @@ composes naturally with <code>|&gt;</code>:</p>
 <div class="section level2">
 <h2 id="cumulative-adjustment">Cumulative adjustment<a class="anchor" aria-label="anchor" href="#cumulative-adjustment"></a>
 </h2>
-<p>When you want to visualise how the effect estimate changes as
-confounders are added sequentially — a common presentation in
-epidemiological reporting — use <code>cumulative = TRUE</code>. Use
+<p>Although generally recommended against when performing causal
+inference, sequential addition of covariates may be helpful when
+building regression models for predictive and descriptive aims. As such,
+this feature is provided to visualise how the effect estimate changes as
+covariates are added sequentially. This may aid in the selection of a
+parsimonious model with the best fit as recommended by the principles
+laid out in ‘R for Health Data Science’ by Ewen Harrison and Riinu Pius.
+To use this feature, set <code>cumulative = TRUE</code> and use
 <code>cumulative_labels</code> to provide human-readable row names:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_cum</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
