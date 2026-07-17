@@ -2,17 +2,19 @@
 
 **ggadjustedforest** creates publication-quality forest plots and
 effect-size tables that display *only* the unadjusted and adjusted
-estimates for a user-specified exposure variable of interest — hiding
-confounder coefficients by design, in accordance with causal inference
-principles (the “Table 2 fallacy”, Westreich & Greenland 2013).
+estimates for a user-specified exposure variable of interest. Confounder
+coefficients are hidden by design, to avoid the “Table 2 fallcy” as
+described by Westreich & Greenland 2013, and in accordance with causal
+inference principles.
 
 ## Motivation
 
-When the estimand of interest is the effect of a single exposure
-variable, reporting confounder coefficients alongside it is misleading:
-those coefficients are not identified under the causal model and depend
-on the full causal structure. `ggadjustedforest` makes it easy to
-present the exposure effect cleanly, before and after adjustment.
+When the estimand is the effect of a single exposure variable, reporting
+confounder coefficients alongside it can be misleading. These
+coefficients are not identified under the causal model and depend on the
+full causal structure. `ggadjustedforest` makes it easy to present the
+exposure effect cleanly, before and after adjustment, reducing
+susceptibility to false misinterpretations of confounder coefficients.
 
 ## Installation
 
