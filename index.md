@@ -18,7 +18,10 @@ present the exposure effect cleanly, before and after adjustment.
 
 ``` r
 
-# Install from GitHub (CRAN submission pending)
+# Install from CRAN
+install.packages("ggadjustedforest")
+
+# Or install the development version from GitHub
 # install.packages("remotes")
 remotes::install_github("kriz98/gg_adjusted_forest")
 ```
@@ -84,16 +87,32 @@ p2 <- gg_adjusted_forest(colon_s, "status",   "node4", confounders,
                           show_table = FALSE)$plot
 p1 / p2
 
-# Cox proportional hazards
+# Cox proportional hazards — rotterdam breast cancer data (survival package)
+library(dplyr)
+data(cancer, package = "survival")
+
+df <- rotterdam |>
+  transmute(
+    hormon = hormon,
+    age    = age,
+    size   = size,
+    grade  = grade,
+    nodes  = nodes,
+    er10   = er / 10,
+    death  = death,
+    time   = dtime
+  ) |>
+  tidyr::drop_na()
+
 cox_result <- gg_adjusted_forest(
-  data       = colon_s,
-  outcome    = "status",
-  exposure   = "node4",
-  covariates = confounders,
+  data       = df,
+  outcome    = "death",
+  exposure   = "hormon",
+  covariates = c("age", "size", "grade", "nodes", "er10"),
   model_type = "coxph",
-  time_var   = "time.years",
-  event_var  = "status",
-  title      = "Hazard of Death by Lymph Node Involvement"
+  time_var   = "time",
+  event_var  = "death",
+  title      = "Effect of Hormonal Therapy on Survival (Rotterdam)"
 )
 cox_result$plot
 ```

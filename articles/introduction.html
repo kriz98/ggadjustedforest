@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ggadjustedforest</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,10 @@
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install from GitHub (CRAN submission pending)</span></span>
+<code class="sourceCode R"><span><span class="co"># Install from CRAN</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"ggadjustedforest"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or install the development version from GitHub</span></span>
 <span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"kriz98/gg_adjusted_forest"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -109,7 +112,7 @@ nodes (<code>node4</code>) increases the risk of 5-year mortality,
 before and after adjusting for patient and tumour characteristics.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/kriz98/gg_adjusted_forest" class="external-link">ggadjustedforest</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; ggadjustedforest 0.1.0 -- Forest plots for exposure effects, hiding confounders by design.</span></span>
+<span><span class="co">#&gt; ggadjustedforest 0.1.1 -- Forest plots for exposure effects, hiding confounders by design.</span></span>
 <span><span class="co">#&gt; See `?gg_adjusted_forest` to get started.</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ewenharrison/finalfit" class="external-link">finalfit</a></span><span class="op">)</span></span>
 <span></span>
@@ -215,17 +218,46 @@ epidemiological reporting — use <code>cumulative = TRUE</code>. Use
 <h2 id="cox-proportional-hazards-regression">Cox proportional hazards regression<a class="anchor" aria-label="anchor" href="#cox-proportional-hazards-regression"></a>
 </h2>
 <p>For time-to-event outcomes supply <code>model_type = "coxph"</code>
-along with <code>time_var</code> and <code>event_var</code>:</p>
+along with <code>time_var</code> and <code>event_var</code>. This
+example uses the <code>rotterdam</code> breast cancer dataset from the
+<strong>survival</strong> package (2,982 primary breast cancer patients;
+Rotterdam tumour bank). The exposure of interest is hormonal therapy
+(<code>hormon</code>), adjusted for age, tumour size, grade, number of
+positive lymph nodes, and oestrogen receptor level.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
-<span>  data       <span class="op">=</span> <span class="va">colon_s</span>,</span>
-<span>  outcome    <span class="op">=</span> <span class="st">"status"</span>,</span>
-<span>  exposure   <span class="op">=</span> <span class="st">"node4"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="va">confounders</span>,</span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Attaching package: 'dplyr'</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:stats':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     filter, lag</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">cancer</span>, package <span class="op">=</span> <span class="st">"survival"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">rotterdam</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/transmute.html" class="external-link">transmute</a></span><span class="op">(</span></span>
+<span>    hormon <span class="op">=</span> <span class="va">hormon</span>,       <span class="co"># 1 = hormonal therapy, 0 = none</span></span>
+<span>    age    <span class="op">=</span> <span class="va">age</span>,</span>
+<span>    size   <span class="op">=</span> <span class="va">size</span>,         <span class="co"># tumour size (mm)</span></span>
+<span>    grade  <span class="op">=</span> <span class="va">grade</span>,        <span class="co"># tumour grade</span></span>
+<span>    nodes  <span class="op">=</span> <span class="va">nodes</span>,        <span class="co"># positive lymph nodes</span></span>
+<span>    er10   <span class="op">=</span> <span class="va">er</span> <span class="op">/</span> <span class="fl">10</span>,      <span class="co"># oestrogen receptor (fmol/10 l)</span></span>
+<span>    death  <span class="op">=</span> <span class="va">death</span>,</span>
+<span>    time   <span class="op">=</span> <span class="va">dtime</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result_cox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_adjusted_forest.html">gg_adjusted_forest</a></span><span class="op">(</span></span>
+<span>  data       <span class="op">=</span> <span class="va">df</span>,</span>
+<span>  outcome    <span class="op">=</span> <span class="st">"death"</span>,</span>
+<span>  exposure   <span class="op">=</span> <span class="st">"hormon"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"size"</span>, <span class="st">"grade"</span>, <span class="st">"nodes"</span>, <span class="st">"er10"</span><span class="op">)</span>,</span>
 <span>  model_type <span class="op">=</span> <span class="st">"coxph"</span>,</span>
-<span>  time_var   <span class="op">=</span> <span class="st">"time.years"</span>,</span>
-<span>  event_var  <span class="op">=</span> <span class="st">"status"</span>,</span>
-<span>  title      <span class="op">=</span> <span class="st">"Hazard of Death by Lymph Node Involvement (Cox model)"</span></span>
+<span>  time_var   <span class="op">=</span> <span class="st">"time"</span>,</span>
+<span>  event_var  <span class="op">=</span> <span class="st">"death"</span>,</span>
+<span>  title      <span class="op">=</span> <span class="st">"Effect of Hormonal Therapy on Survival (Rotterdam)"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result_cox</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/cox-1.png" class="r-plt" alt="" width="672"></p>

@@ -4,7 +4,10 @@
 
 ``` r
 
-# Install from GitHub (CRAN submission pending)
+# Install from CRAN
+install.packages("ggadjustedforest")
+
+# Or install the development version from GitHub
 # install.packages("remotes")
 remotes::install_github("kriz98/gg_adjusted_forest")
 ```
@@ -45,7 +48,7 @@ characteristics.
 ``` r
 
 library(ggadjustedforest)
-#> ggadjustedforest 0.1.0 -- Forest plots for exposure effects, hiding confounders by design.
+#> ggadjustedforest 0.1.1 -- Forest plots for exposure effects, hiding confounders by design.
 #> See `?gg_adjusted_forest` to get started.
 library(finalfit)
 
@@ -151,19 +154,47 @@ result_cum$formatted_table[, c("model", "formatted", "p.value")]
 ## Cox proportional hazards regression
 
 For time-to-event outcomes supply `model_type = "coxph"` along with
-`time_var` and `event_var`:
+`time_var` and `event_var`. This example uses the `rotterdam` breast
+cancer dataset from the **survival** package (2,982 primary breast
+cancer patients; Rotterdam tumour bank). The exposure of interest is
+hormonal therapy (`hormon`), adjusted for age, tumour size, grade,
+number of positive lymph nodes, and oestrogen receptor level.
 
 ``` r
 
+library(dplyr)
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+data(cancer, package = "survival")
+
+df <- rotterdam |>
+  transmute(
+    hormon = hormon,       # 1 = hormonal therapy, 0 = none
+    age    = age,
+    size   = size,         # tumour size (mm)
+    grade  = grade,        # tumour grade
+    nodes  = nodes,        # positive lymph nodes
+    er10   = er / 10,      # oestrogen receptor (fmol/10 l)
+    death  = death,
+    time   = dtime
+  ) |>
+  tidyr::drop_na()
+
 result_cox <- gg_adjusted_forest(
-  data       = colon_s,
-  outcome    = "status",
-  exposure   = "node4",
-  covariates = confounders,
+  data       = df,
+  outcome    = "death",
+  exposure   = "hormon",
+  covariates = c("age", "size", "grade", "nodes", "er10"),
   model_type = "coxph",
-  time_var   = "time.years",
-  event_var  = "status",
-  title      = "Hazard of Death by Lymph Node Involvement (Cox model)"
+  time_var   = "time",
+  event_var  = "death",
+  title      = "Effect of Hormonal Therapy on Survival (Rotterdam)"
 )
 result_cox$plot
 ```

@@ -1,6 +1,17 @@
 # Changelog
 
+## ggadjustedforest 0.1.1
+
+### Documentation
+
+- Updated vignette and README examples to use the `rotterdam` breast
+  cancer dataset (from **survival**) for the Cox model demonstration.
+- Installation instructions updated to reflect CRAN availability.
+- Long plot titles now wrap automatically to prevent clipping.
+
 ## ggadjustedforest 0.1.0
+
+CRAN release: 2026-07-17
 
 ### Initial release
 
