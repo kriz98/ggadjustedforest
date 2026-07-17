@@ -30,43 +30,47 @@ remotes::install_github("kriz98/gg_adjusted_forest")
 
 ## Motivation
 
-When building multivariable models for causal inference, there is an **exposure**
-of interest for which a causal estimand applies to. The coefficients for adjusted
-covariates (confounders) can however be misinterpreted when presented together
-with the estimand of interest. Reporting them can even mislead readers,
-because confounder coefficients are not identified under the causal model, and are
-susceptible to absorbing collider bias, mediation pathways, and other artefacts
-depending on causal structures (Hernán & Robins, *Causal Inference: What If*, 2020; Westreich
-& Greenland, *Am J Epidemiol*, 2013).
+When building multivariable models for causal inference, there is an **exposure** of interest for which a causal estimand applies to. The coefficients for adjusted covariates (confounders) can however be misinterpreted when presented together with the effect estimate of interest. Reporting them can even mislead readers, because confounder coefficients are not identified under the causal model, and are susceptible to absorbing collider bias, mediation pathways, and other artefacts depending on causal structures (Hernán & Robins, *Causal Inference: What If*, 2020; Westreich & Greenland, *Am J Epidemiol*, 2013).
 
 STROBE guidelines (Vandenbroucke et al., 2007) and recent work on the
-**estimand framework** (ICH E9(R1), 2019) both emphasise that reporting should
-clearly distinguish the target quantity from nuisance parameters.
+**estimand framework** (ICH E9(R1), 2019) both emphasise that reporting should clearly distinguish the target quantity from nuisance parameters.
 
-`ggadjustedforest` operationalises this principle and fits the models you
-specify but **only exposes the coefficient of interest** in both the plot and the
-table, hiding confounder estimates by design. We also provide a cumulative
-adjustment option, to show the effect of adjustment and model building during
-exploratory phases of studies.
+`ggadjustedforest` operationalises these principles and fits the models you
+specify but **only exposes the effect of interest** in both the forest plots and associated tables, hiding confounder estimates by design.
+
+An additional feature for exploratory data analysis is also provided whereby the cumulative addition of covariates can be investigated.
 
 ---
 
 ## Data
 
-All examples use `colon_s` from the `finalfit` package — 929 patients with
-colon cancer from the North Central Cancer Treatment Group (NCCTG) trial
-(Moertel et al., *NEJM* 1990). The research question throughout is whether
-having >4 positive lymph nodes (`node4`) increases the risk of 5-year mortality,
-before and after adjusting for patient and tumour characteristics.
+All examples use the `rotterdam` breast cancer dataset from the **survival**
+package — 2,982 primary breast cancer patients from the Rotterdam tumour bank.
+The research question throughout is whether hormonal therapy (`hormon`) affects
+survival and recurrence, before and after adjusting for patient and tumour
+characteristics.
 
 ```{r setup}
 library(ggadjustedforest)
-library(finalfit)
+library(dplyr)
+data(cancer, package = "survival")
 
-data(colon_s)
-colon_s$died_5yr <- as.integer(colon_s$mort_5yr == "Died")
+df <- rotterdam |>
+  transmute(
+    hormon = hormon,   # 1 = hormonal therapy, 0 = none
+    age    = age,
+    size   = size,     # tumour size (mm)
+    grade  = grade,    # tumour grade
+    nodes  = nodes,    # positive lymph nodes
+    er10   = er / 10,  # oestrogen receptor (fmol/10 l)
+    recur  = recur,    # recurrence (0/1)
+    death  = death,    # all-cause death (0/1)
+    rtime  = rtime,    # time to recurrence/censoring
+    dtime  = dtime     # time to death/censoring
+  ) |>
+  tidyr::drop_na()
 
-confounders <- c("age", "sex.factor", "extent.factor", "differ.factor", "surg.factor")
+covariates <- c("age", "size", "grade", "nodes", "er10")
 ```
 
 ---
@@ -77,13 +81,13 @@ The pipe-friendly API puts `data` first so the function composes naturally with
 `|>`:
 
 ```{r logistic}
-result <- colon_s |>
+result <- df |>
   gg_adjusted_forest(
-    outcome    = "died_5yr",
-    exposure   = "node4",
-    covariates = confounders,
+    outcome    = "death",
+    exposure   = "hormon",
+    covariates = covariates,
     model_type = "logistic",
-    title      = "Effect of Lymph Node Involvement (>4 nodes) on 5-Year Mortality"
+    title      = "Effect of Hormonal Therapy on Death (Logistic)"
   )
 result$table
 ```
@@ -112,21 +116,21 @@ added sequentially — a common presentation in epidemiological reporting — us
 
 ```{r cumulative, fig.height=5}
 result_cum <- gg_adjusted_forest(
-  data       = colon_s,
-  outcome    = "died_5yr",
-  exposure   = "node4",
-  covariates = confounders,
+  data       = df,
+  outcome    = "death",
+  exposure   = "hormon",
+  covariates = covariates,
   model_type = "logistic",
   cumulative = TRUE,
   cumulative_labels = c(
-    "Unadjusted"                                                         = "Unadjusted",
-    "+ age"                                                              = "+ Age",
-    "+ age + sex.factor"                                                 = "+ Sex",
-    "+ age + sex.factor + extent.factor"                                 = "+ Extent of spread",
-    "+ age + sex.factor + extent.factor + differ.factor"                 = "+ Tumour differentiation",
-    "+ age + sex.factor + extent.factor + differ.factor + surg.factor"   = "+ Time from surgery"
+    "Unadjusted"                       = "Unadjusted",
+    "+ age"                            = "+ Age",
+    "+ age + size"                     = "+ Tumour size",
+    "+ age + size + grade"             = "+ Grade",
+    "+ age + size + grade + nodes"     = "+ Lymph nodes",
+    "+ age + size + grade + nodes + er10" = "+ Oestrogen receptor"
   ),
-  title = "Cumulative Adjustment: Lymph Node Involvement on 5-Year Mortality"
+  title = "Cumulative Adjustment: Hormonal Therapy on Death"
 )
 result_cum$plot
 ```
@@ -142,35 +146,16 @@ result_cum$formatted_table[, c("model", "formatted", "p.value")]
 ## Cox proportional hazards regression
 
 For time-to-event outcomes supply `model_type = "coxph"` along with `time_var`
-and `event_var`. This example uses the `rotterdam` breast cancer dataset from the
-**survival** package (2,982 primary breast cancer patients; Rotterdam tumour bank).
-The exposure of interest is hormonal therapy (`hormon`), adjusted for age, tumour
-size, grade, number of positive lymph nodes, and oestrogen receptor level.
+and `event_var`:
 
 ```{r cox}
-library(dplyr)
-data(cancer, package = "survival")
-
-df <- rotterdam |>
-  transmute(
-    hormon = hormon,       # 1 = hormonal therapy, 0 = none
-    age    = age,
-    size   = size,         # tumour size (mm)
-    grade  = grade,        # tumour grade
-    nodes  = nodes,        # positive lymph nodes
-    er10   = er / 10,      # oestrogen receptor (fmol/10 l)
-    death  = death,
-    time   = dtime
-  ) |>
-  tidyr::drop_na()
-
 result_cox <- gg_adjusted_forest(
   data       = df,
   outcome    = "death",
   exposure   = "hormon",
-  covariates = c("age", "size", "grade", "nodes", "er10"),
+  covariates = covariates,
   model_type = "coxph",
-  time_var   = "time",
+  time_var   = "dtime",
   event_var  = "death",
   title      = "Effect of Hormonal Therapy on Survival (Rotterdam)"
 )
@@ -190,21 +175,21 @@ of `ggadjustedforest`:
 ```{r multi-patchwork, fig.height=6}
 library(patchwork)
 
-colon_s$died_all <- colon_s$status
-
-p_5yr <- gg_adjusted_forest(
-  data = colon_s, outcome = "died_5yr", exposure = "node4",
-  covariates = confounders, model_type = "logistic",
-  title = "5-Year Mortality", show_table = FALSE
+p_death <- gg_adjusted_forest(
+  data = df, outcome = "death", exposure = "hormon",
+  covariates = covariates, model_type = "coxph",
+  time_var = "dtime", event_var = "death",
+  title = "Overall survival", show_table = FALSE
 )$plot
 
-p_all <- gg_adjusted_forest(
-  data = colon_s, outcome = "died_all", exposure = "node4",
-  covariates = confounders, model_type = "logistic",
-  title = "Death (all follow-up)", show_table = FALSE
+p_recur <- gg_adjusted_forest(
+  data = df, outcome = "recur", exposure = "hormon",
+  covariates = covariates, model_type = "coxph",
+  time_var = "rtime", event_var = "recur",
+  title = "Recurrence-free survival", show_table = FALSE
 )$plot
 
-p_5yr / p_all
+p_death / p_recur
 ```
 
 This approach gives full control over each panel — different covariate sets,
@@ -219,11 +204,13 @@ All the major aesthetic parameters are exposed:
 
 ```{r custom}
 gg_adjusted_forest(
-  data           = colon_s,
-  outcome        = "died_5yr",
-  exposure       = "node4",
-  covariates     = confounders,
-  model_type     = "logistic",
+  data           = df,
+  outcome        = "death",
+  exposure       = "hormon",
+  covariates     = covariates,
+  model_type     = "coxph",
+  time_var       = "dtime",
+  event_var      = "death",
   color          = "#2166ac",
   point_size     = 5,
   point_shape    = 18,
@@ -241,10 +228,10 @@ Use `forest_table()` when you only need the numbers:
 
 ```{r table-only}
 forest_table(
-  data       = colon_s,
-  outcome    = "died_5yr",
-  exposure   = "node4",
-  covariates = confounders,
+  data       = df,
+  outcome    = "death",
+  exposure   = "hormon",
+  covariates = covariates,
   model_type = "logistic"
 )
 ```
@@ -254,8 +241,8 @@ forest_table(
 ## References
 
 - Hernán MA, Robins JM (2020). *Causal Inference: What If*. Chapman & Hall/CRC.
-- Moertel CG et al. (1990). Levamisole and fluorouracil for adjuvant therapy of
-  resected colon carcinoma. *N Engl J Med* 322(6): 352–358.
+- Royston P, Altman DG (2013). External validation of a Cox prognostic model:
+  principles and methods. *BMC Med Res Methodol* 13:33. (Rotterdam dataset)
 - Vandenbroucke JP et al. (2007). Strengthening the Reporting of Observational
   Studies in Epidemiology (STROBE). *PLoS Med* 4(10): e297.
 - Westreich D, Greenland S (2013). The table 2 fallacy: presenting and
