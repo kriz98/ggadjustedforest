@@ -8,16 +8,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/kriz98/gg_adjusted_forest/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/kriz98/ggadjustedforest/blob/main/DESCRIPTION)
 
 Varghese C (2026). *ggadjustedforest: Publication Ready Forest Plots for
 Estimand of Interest*. R package version 0.1.1,
-<https://github.com/kriz98/gg_adjusted_forest>.
+<https://github.com/kriz98/ggadjustedforest>.
 
     @Manual{,
       title = {ggadjustedforest: Publication Ready Forest Plots for Estimand of Interest},
       author = {Chris Varghese},
       year = {2026},
       note = {R package version 0.1.1},
-      url = {https://github.com/kriz98/gg_adjusted_forest},
+      url = {https://github.com/kriz98/ggadjustedforest},
     }
