@@ -1,5 +1,5 @@
 Package: ggadjustedforest
-Title: Publication Ready Forest Plots for Estimand of Interest
+Title: Publication Ready Forest Plots for the Estimand
 Version: 0.1.1
 Authors@R: person("Chris", "Varghese", email = "chris.varghese@auckland.ac.nz",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7369-8639"))
@@ -8,7 +8,7 @@ Description: Creates publication-quality forest plots and effect-size tables tha
     variable of interest, hiding confounder coefficients in accordance with causal
     inference principles. Supports logistic, linear, Poisson, and Cox proportional
     hazards models, with optional cumulative-adjustment visualisation. Built on
-    'ggplot2' and follows the tidyverse design philosophy.
+    'ggplot2'.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Language: en-GB
