@@ -7,6 +7,8 @@ inst/doc
 ..Rcheck/
 *.tar.gz
 tests/testthat/Rplots.pdf
+CRAN-SUBMISSION
+vignettes/.Rhistory
 *.png
 !docs/**/*.png
 Rplots.pdf
