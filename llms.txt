@@ -28,93 +28,81 @@ remotes::install_github("kriz98/gg_adjusted_forest")
 
 ## Quick start
 
-The examples below use `colon_s` from the `finalfit` package — 929 colon
-cancer patients from the NCCTG trial. The research question is whether
-having \>4 positive lymph nodes (`node4`) increases 5-year mortality
-(`mort_5yr`), before and after adjusting for patient and tumour
-characteristics.
+The examples below use the `rotterdam` breast cancer dataset from the
+**survival** package (2,982 patients; Rotterdam tumour bank). The
+research question is whether hormonal therapy (`hormon`) affects
+survival, before and after adjusting for age, tumour size, grade, lymph
+node involvement, and oestrogen receptor level.
 
 ``` r
 
 library(ggadjustedforest)
-library(finalfit)  # for colon_s
-
-data(colon_s)
-colon_s$died_5yr <- as.integer(colon_s$mort_5yr == "Died")
-
-confounders <- c("age", "sex.factor", "extent.factor", "differ.factor", "surg.factor")
-
-# Unadjusted vs fully adjusted — pipe-friendly
-result <- colon_s |>
-  gg_adjusted_forest(
-    outcome    = "died_5yr",
-    exposure   = "node4",
-    covariates = confounders,
-    model_type = "logistic",
-    title      = "Effect of Lymph Node Involvement on 5-Year Mortality"
-  )
-result$plot
-result$table          # tibble of numeric estimates
-result$formatted_table  # tibble with "OR (lower–upper)" strings
-
-# Cumulative adjustment — watch the estimate evolve as confounders are added
-result_cum <- gg_adjusted_forest(
-  data       = colon_s,
-  outcome    = "died_5yr",
-  exposure   = "node4",
-  covariates = confounders,
-  model_type = "logistic",
-  cumulative = TRUE,
-  cumulative_labels = c(
-    "Unadjusted"                                                         = "Unadjusted",
-    "+ age"                                                              = "+ Age",
-    "+ age + sex.factor"                                                 = "+ Sex",
-    "+ age + sex.factor + extent.factor"                                 = "+ Extent of spread",
-    "+ age + sex.factor + extent.factor + differ.factor"                 = "+ Tumour differentiation",
-    "+ age + sex.factor + extent.factor + differ.factor + surg.factor"   = "+ Time from surgery"
-  ),
-  title = "Cumulative Adjustment: Lymph Node Involvement on 5-Year Mortality"
-)
-result_cum$plot
-
-# Multiple outcomes — stack with patchwork (already a dependency)
-library(patchwork)
-p1 <- gg_adjusted_forest(colon_s, "died_5yr", "node4", confounders,
-                          model_type = "logistic", title = "5-Year Mortality",
-                          show_table = FALSE)$plot
-p2 <- gg_adjusted_forest(colon_s, "status",   "node4", confounders,
-                          model_type = "logistic", title = "Death (all follow-up)",
-                          show_table = FALSE)$plot
-p1 / p2
-
-# Cox proportional hazards — rotterdam breast cancer data (survival package)
 library(dplyr)
 data(cancer, package = "survival")
 
 df <- rotterdam |>
   transmute(
-    hormon = hormon,
+    hormon = hormon,   # 1 = hormonal therapy, 0 = none
     age    = age,
-    size   = size,
+    size   = size,     # tumour size (mm)
     grade  = grade,
-    nodes  = nodes,
-    er10   = er / 10,
+    nodes  = nodes,    # positive lymph nodes
+    er10   = er / 10,  # oestrogen receptor (fmol/10 l)
     death  = death,
     time   = dtime
   ) |>
   tidyr::drop_na()
 
-cox_result <- gg_adjusted_forest(
+covariates <- c("age", "size", "grade", "nodes", "er10")
+
+# Cox proportional hazards — unadjusted vs adjusted
+result <- gg_adjusted_forest(
   data       = df,
   outcome    = "death",
   exposure   = "hormon",
-  covariates = c("age", "size", "grade", "nodes", "er10"),
+  covariates = covariates,
   model_type = "coxph",
   time_var   = "time",
   event_var  = "death",
   title      = "Effect of Hormonal Therapy on Survival (Rotterdam)"
 )
-cox_result$plot
+result$plot
+result$table           # tibble of numeric estimates
+result$formatted_table # tibble with "HR (lower–upper)" strings
+
+# Cumulative adjustment — watch the estimate evolve as confounders are added
+result_cum <- gg_adjusted_forest(
+  data       = df,
+  outcome    = "death",
+  exposure   = "hormon",
+  covariates = covariates,
+  model_type = "coxph",
+  time_var   = "time",
+  event_var  = "death",
+  cumulative = TRUE,
+  cumulative_labels = c(
+    "Unadjusted"                       = "Unadjusted",
+    "+ age"                            = "+ Age",
+    "+ age + size"                     = "+ Tumour size",
+    "+ age + size + grade"             = "+ Grade",
+    "+ age + size + grade + nodes"     = "+ Lymph nodes",
+    "+ age + size + grade + nodes + er10" = "+ Oestrogen receptor"
+  ),
+  title = "Cumulative Adjustment: Hormonal Therapy on Survival"
+)
+result_cum$plot
+
+# Multiple outcomes — stack with patchwork (already a dependency)
+library(patchwork)
+p1 <- gg_adjusted_forest(df, "death", "hormon", covariates,
+                          model_type = "coxph", time_var = "time",
+                          event_var = "death", title = "Overall survival",
+                          show_table = FALSE)$plot
+p2 <- gg_adjusted_forest(df, "death", "nodes", covariates[covariates != "nodes"],
+                          model_type = "coxph", time_var = "time",
+                          event_var = "death", title = "Effect of lymph node burden",
+                          show_table = FALSE)$plot
+p1 / p2
 ```
 
 ## Supported model types
