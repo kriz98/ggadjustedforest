@@ -1,5 +1,7 @@
 # ggadjustedforest
 
+![](reference/figures/logo.svg)
+
 **ggadjustedforest** creates publication-quality forest plots and
 effect-size tables that display *only* the unadjusted and adjusted
 estimates for a user-specified exposure variable of interest. Confounder
