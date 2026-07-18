@@ -72,6 +72,17 @@ gg_adjusted_forest(
   Logical. If `TRUE`, fit models that progressively add one covariate at
   a time and show each step as a separate row. Default `FALSE`.
 
+  **Important:** Odds ratios (`"logistic"`) and hazard ratios
+  (`"coxph"`) are **non-collapsible** effect measures. This means the
+  exposure coefficient will change as covariates are added even in the
+  complete absence of confounding, because adding covariates reduces
+  residual variance on the latent scale. Consequently, a shifting OR or
+  HR across sequential models cannot be cleanly attributed to
+  confounding. For causal inference, the unadjusted vs. fully-adjusted
+  comparison (the default) is preferred. Cumulative display is most
+  interpretable for collapsible measures: risk differences (`"linear"`)
+  and risk ratios (`"poisson"`).
+
 - cumulative_labels:
 
   Optional named character vector to rename the cumulative model labels.
@@ -194,97 +205,28 @@ An object of class `ggadjustedforest` (a list) with components:
 ## Examples
 
 ``` r
-# Logistic regression example
-data(mtcars)
-mtcars$am <- as.integer(mtcars$am)   # binary outcome
+# Cox proportional hazards — rotterdam breast cancer data
+# \donttest{
+data(cancer, package = "survival")
+df <- rotterdam[, c("hormon", "age", "size", "grade", "nodes", "death", "dtime")]
+df <- df[complete.cases(df), ]
+df$er10 <- rotterdam$er[complete.cases(rotterdam[,
+  c("hormon", "age", "size", "grade", "nodes", "death", "dtime")])] / 10
 result <- gg_adjusted_forest(
-  data        = mtcars,
-  outcome     = "am",
-  exposure    = "hp",
-  covariates  = c("wt", "cyl"),
-  model_type  = "logistic",
-  title       = "Effect of Horsepower on Transmission Type"
+  data       = df,
+  outcome    = "death",
+  exposure   = "hormon",
+  covariates = c("age", "size", "grade", "nodes", "er10"),
+  model_type = "coxph",
+  time_var   = "dtime",
+  event_var  = "death",
+  title      = "Effect of Hormonal Therapy on Survival (Rotterdam)"
 )
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 result$table
 #> # A tibble: 2 × 6
-#>   model      estimate conf.low conf.high p.value     n
-#>   <fct>         <dbl>    <dbl>     <dbl>   <dbl> <int>
-#> 1 Unadjusted    0.992    0.979      1.00  0.181     32
-#> 2 Adjusted      1.03     1.00       1.09  0.0840    32
-
-# Cumulative adjustment
-result2 <- gg_adjusted_forest(
-  data       = mtcars,
-  outcome    = "am",
-  exposure   = "hp",
-  covariates = c("wt", "cyl"),
-  cumulative = TRUE
-)
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-result2$table
-#> # A tibble: 3 × 6
-#>   model      estimate conf.low conf.high p.value     n
-#>   <fct>         <dbl>    <dbl>     <dbl>   <dbl> <int>
-#> 1 Unadjusted    0.992    0.979      1.00  0.181     32
-#> 2 + wt          1.04     1.01       1.09  0.0409    32
-#> 3 + wt + cyl    1.03     1.00       1.09  0.0840    32
+#>   model      estimate conf.low conf.high    p.value     n
+#>   <fct>         <dbl>    <dbl>     <dbl>      <dbl> <dbl>
+#> 1 Unadjusted    1.51     1.28       1.79 0.00000135  1272
+#> 2 Adjusted      0.951    0.800      1.13 0.563       1272
+# }
 ```

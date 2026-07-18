@@ -1,6 +1,27 @@
 # Changelog
 
+## ggadjustedforest 0.1.1
+
+### Changes
+
+- `cumulative = TRUE` with `model_type = "logistic"` or `"coxph"` now
+  emits a warning explaining that odds ratios and hazard ratios are
+  non-collapsible effect measures. A shifting OR/HR across sequential
+  models cannot be cleanly attributed to confounding; cumulative display
+  is most interpretable for collapsible measures (risk differences, risk
+  ratios). The feature is retained for descriptive and predictive
+  modelling contexts.
+
+### Documentation
+
+- Updated vignette and README examples to use the `rotterdam` breast
+  cancer dataset (from **survival**) for the Cox model demonstration.
+- Installation instructions updated to reflect CRAN availability.
+- Long plot titles now wrap automatically to prevent clipping.
+
 ## ggadjustedforest 0.1.0
+
+CRAN release: 2026-07-17
 
 ### Initial release
 
