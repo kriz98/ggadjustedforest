@@ -1,7 +1,7 @@
 # Extract a formatted effect-size table without generating a plot
 
 A convenience wrapper around
-[`gg_adjusted_forest()`](https://kriz98.github.io/gg_adjusted_forest/reference/gg_adjusted_forest.md)
+[`gg_adjusted_forest()`](https://kriz98.github.io/ggadjustedforest/reference/gg_adjusted_forest.md)
 that returns only the formatted table. Useful when you want numeric
 summaries without producing a graphic.
 

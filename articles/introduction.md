@@ -302,7 +302,7 @@ gg_adjusted_forest(
 ## Extracting the table only
 
 Use
-[`forest_table()`](https://kriz98.github.io/gg_adjusted_forest/reference/forest_table.md)
+[`forest_table()`](https://kriz98.github.io/ggadjustedforest/reference/forest_table.md)
 when you only need the numbers:
 
 ``` r
