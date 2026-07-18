@@ -7,7 +7,7 @@
 [![R-CMD-check](https://github.com/kriz98/ggadjustedforest/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/kriz98/ggadjustedforest/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-<img src="man/figures/logo.svg" align="right" height="140"/>
+<img src="man/figures/logo.svg" align="right" height="140" alt="ggadjustedforest hex logo"/>
 
 **ggadjustedforest** creates publication-quality forest plots and effect-size tables that display *only* the unadjusted and adjusted estimates for a user-specified exposure variable of interest. Confounder coefficients are hidden by design, to avoid the "Table 2 fallacy" as described by Westreich & Greenland 2013, and in accordance with causal inference principles.
 
