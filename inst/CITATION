@@ -1,0 +1,11 @@
+bibentry(
+  bibtype  = "Manual",
+  title    = "ggadjustedforest: Publication Ready Forest Plots for the Estimand",
+  author   = person("Chris", "Varghese",
+                    email   = "chris.varghese@auckland.ac.nz",
+                    comment = c(ORCID = "0000-0001-7369-8639")),
+  year     = "2025",
+  note     = "R package version 0.1.1",
+  url      = "https://kriz98.github.io/ggadjustedforest/",
+  doi      = "10.32614/CRAN.package.ggadjustedforest"
+)
